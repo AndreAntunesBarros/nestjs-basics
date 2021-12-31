@@ -1,0 +1,2823 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model account_statements {
+  id             Int                               @id @default(autoincrement())
+  type           account_statements_type
+  financial_type account_statements_financial_type
+  credit_id      Int
+  active         Boolean                           @default(true)
+  created        DateTime?                         @db.Timestamp(0)
+  modified       DateTime?                         @db.Timestamp(0)
+  credits        credits                           @relation(fields: [credit_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_account_statements_credits1")
+
+  @@index([credit_id], map: "fk_account_statements_credits1_idx")
+}
+
+model achievements {
+  id            Int      @id @default(autoincrement())
+  type          String   @db.VarChar(50)
+  level         Int      @default(0)
+  progress      Int      @default(0)
+  user_id       Int      @default(0)
+  to_next_level Int      @default(0)
+  created       DateTime @db.DateTime(0)
+  modified      DateTime @db.DateTime(0)
+  users         users    @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "FK_achievements_users")
+
+  @@index([user_id], map: "user_id")
+}
+
+model addresses {
+  id                         Int           @id @default(autoincrement())
+  CNPJ                       String?       @db.VarChar(45)
+  title                      String?       @db.Text
+  street                     String?       @db.VarChar(150)
+  number                     String?       @db.VarChar(45)
+  complement                 String?       @db.Text
+  neighborhood               String?       @db.VarChar(150)
+  city_id                    Int?
+  city                       String?       @db.VarChar(150)
+  state_id                   Int?
+  state                      String?       @db.VarChar(150)
+  country_id                 Int?
+  country                    String?       @db.VarChar(150)
+  zipcode                    String?       @db.VarChar(45)
+  lat                        String?       @db.VarChar(255)
+  lng                        String?       @db.VarChar(255)
+  radius                     Float         @default(5)
+  count_notifications_radius Int           @default(0)
+  individual_id              Int?
+  enterprise_id              Int?
+  active                     Boolean       @default(true)
+  verified                   Boolean       @default(false)
+  created                    DateTime?     @db.Timestamp(0)
+  modified                   DateTime?     @db.Timestamp(0)
+  cities                     cities?       @relation(fields: [city_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_addresses_cities1")
+  countries                  countries?    @relation(fields: [country_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_addresses_countries1")
+  enterprises                enterprises?  @relation(fields: [enterprise_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_addresses_enterprises1")
+  individuals                individuals?  @relation(fields: [individual_id], references: [id], onUpdate: NoAction, map: "addresses_ibfk_1")
+  states                     states?       @relation(fields: [state_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_addresses_states1")
+  occurrences                occurrences[]
+
+  @@index([city_id], map: "fk_addresses_cities1")
+  @@index([country_id], map: "fk_addresses_countries1")
+  @@index([enterprise_id], map: "fk_addresses_enterprises1_idx")
+  @@index([individual_id], map: "fk_addresses_individuals1_idx")
+  @@index([state_id], map: "fk_addresses_states1")
+}
+
+model aditional_values {
+  id                                            BigInt      @id @default(autoincrement()) @db.UnsignedBigInt
+  occurrence_id                                 Int
+  user_created_id                               Int
+  user_id                                       Int?
+  value                                         Decimal     @db.Decimal(10, 2)
+  created                                       DateTime    @default(now()) @db.Timestamp(0)
+  modified                                      DateTime    @default(now()) @db.Timestamp(0)
+  occurrences                                   occurrences @relation(fields: [occurrence_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "aditional_values_occurrence_id_foreign")
+  users_aditional_values_user_created_idTousers users       @relation("aditional_values_user_created_idTousers", fields: [user_created_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "aditional_values_user_created_id_foreign")
+  users_aditional_values_user_idTousers         users?      @relation("aditional_values_user_idTousers", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "aditional_values_user_id_foreign")
+
+  @@index([occurrence_id], map: "aditional_values_occurrence_id_foreign")
+  @@index([user_created_id], map: "aditional_values_user_created_id_foreign")
+  @@index([user_id], map: "aditional_values_user_id_foreign")
+}
+
+model adonis_schema {
+  id             Int      @id @default(autoincrement()) @db.UnsignedInt
+  name           String?  @db.VarChar(255)
+  batch          Int?
+  migration_time DateTime @default(now()) @db.Timestamp(0)
+}
+
+model advance_payments {
+  id                                             Int                      @id @default(autoincrement()) @db.UnsignedInt
+  occurrence_id                                  Int
+  user_created_id                                Int
+  user_approved_id                               Int?
+  user_approved_at                               DateTime?                @db.Timestamp(0)
+  is_approved                                    Boolean?
+  user_payed_id                                  Int?
+  user_payed_at                                  DateTime?                @db.Timestamp(0)
+  is_payed                                       Boolean?
+  value                                          Decimal                  @db.Decimal(10, 2)
+  type                                           advance_payments_type
+  status                                         advance_payments_status?
+  file                                           String?                  @db.Text
+  created                                        DateTime                 @default(now()) @db.Timestamp(0)
+  modified                                       DateTime                 @default(now()) @db.Timestamp(0)
+  occurrences                                    occurrences              @relation(fields: [occurrence_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "advance_payments_occurrence_id_foreign")
+  users_advance_payments_user_approved_idTousers users?                   @relation("advance_payments_user_approved_idTousers", fields: [user_approved_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "advance_payments_user_approved_id_foreign")
+  users_advance_payments_user_created_idTousers  users                    @relation("advance_payments_user_created_idTousers", fields: [user_created_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "advance_payments_user_created_id_foreign")
+  users_advance_payments_user_payed_idTousers    users?                   @relation("advance_payments_user_payed_idTousers", fields: [user_payed_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "advance_payments_user_payed_id_foreign")
+
+  @@index([occurrence_id], map: "advance_payments_occurrence_id_foreign")
+  @@index([user_approved_id], map: "advance_payments_user_approved_id_foreign")
+  @@index([user_created_id], map: "advance_payments_user_created_id_foreign")
+  @@index([user_payed_id], map: "advance_payments_user_payed_id_foreign")
+}
+
+model answers {
+  id              Int               @id @default(autoincrement())
+  correct         Boolean           @default(false)
+  body            String?           @db.Text
+  question_id     Int
+  active          Boolean           @default(true)
+  created         DateTime?         @db.Timestamp(0)
+  modified        DateTime?         @db.Timestamp(0)
+  questions       questions         @relation(fields: [question_id], references: [id], onDelete: Cascade, map: "fk_answers_questions1")
+  tests_questions tests_questions[]
+
+  @@index([question_id], map: "fk_answers_questions1_idx")
+}
+
+model app_notifications {
+  id        Int       @id @default(autoincrement())
+  type      String?   @db.VarChar(45)
+  sent      Boolean   @default(false)
+  model     String?   @db.VarChar(45)
+  model_id  String?   @db.VarChar(45)
+  update_at DateTime? @db.Timestamp(0)
+  active    Boolean   @default(true)
+  created   DateTime? @db.Timestamp(0)
+  modified  DateTime? @db.Timestamp(0)
+}
+
+model audit_deltas {
+  id            String  @id @db.Char(36)
+  audit_id      String  @db.Char(36)
+  property_name String  @db.VarChar(255)
+  old_value     String? @db.Text
+  new_value     String? @db.Text
+}
+
+model audits {
+  id          String   @id @db.Char(36)
+  event       String   @db.VarChar(255)
+  model       String   @db.VarChar(255)
+  entity_id   String   @db.VarChar(255)
+  json_object String?  @db.Text
+  description String?  @db.Text
+  source_id   String?  @db.VarChar(255)
+  delta_count Int      @default(0)
+  source_ip   String?  @db.VarChar(255)
+  source_url  String?  @db.VarChar(255)
+  created     DateTime @db.DateTime(0)
+}
+
+model availabilities {
+  id        Int       @id @default(autoincrement())
+  user_id   Int
+  morning   Boolean?  @default(true)
+  afternoon Boolean
+  night     Boolean?  @default(true)
+  evening   Boolean?  @default(true)
+  weekend   Boolean?  @default(true)
+  active    Boolean   @default(true)
+  created   DateTime? @db.Timestamp(0)
+  modified  DateTime? @db.Timestamp(0)
+  users     users     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_availabilities_users1")
+
+  @@index([user_id], map: "fk_availabilities_users1_idx")
+}
+
+model bank_accounts {
+  id            Int       @id @default(autoincrement())
+  user_id       Int?
+  bank_id       Int?
+  agency        String?   @db.VarChar(20)
+  name_holder   String?   @db.VarChar(150)
+  account_digit Int?
+  id_holder     String?   @db.VarChar(20)
+  account       String?   @db.VarChar(20)
+  operation     String?   @db.VarChar(30)
+  created       DateTime? @db.Timestamp(0)
+  modified      DateTime? @db.Timestamp(0)
+  pix_key       String    @db.Text
+  pix_type      String    @db.Text
+  users         users?    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_bank_account_info_users")
+
+  @@index([user_id], map: "FK_bank_account_info_users")
+}
+
+model banks {
+  id       Int      @id @default(autoincrement())
+  code     String?  @db.VarChar(5)
+  name     String?  @db.VarChar(60)
+  active   Int      @default(1) @db.TinyInt
+  created  DateTime @default(now()) @db.Timestamp(0)
+  modified DateTime @default(now()) @db.Timestamp(0)
+}
+
+model blacklist_technicians {
+  id            Int          @id @default(autoincrement())
+  enterprise_id Int?
+  user_id       Int?
+  created       DateTime?    @db.DateTime(0)
+  modified      DateTime?    @db.DateTime(0)
+  enterprises   enterprises? @relation(fields: [enterprise_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_blacklist_technicians_enterprises")
+  users         users?       @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_blacklist_technicians_users")
+
+  @@index([enterprise_id], map: "FK_blacklist_technicians_enterprises")
+  @@index([user_id], map: "FK_blacklist_technicians_users")
+}
+
+model books {
+  id         Int      @id @default(autoincrement())
+  title      String?  @db.VarChar(255)
+  author     String?  @db.VarChar(255)
+  published  Boolean?
+  created_at DateTime @db.DateTime(0)
+  updated_at DateTime @db.DateTime(0)
+}
+
+model broadcasts {
+  id                 Int      @id @default(autoincrement())
+  user_id            Int
+  occurrence_id      Int?
+  notification_push  Boolean  @default(false)
+  notification_sms   Boolean  @default(false)
+  notification_email Boolean  @default(false)
+  notification_bot   Boolean? @default(false)
+  created            DateTime @default(now()) @db.DateTime(0)
+  modified           DateTime @default(now()) @db.DateTime(0)
+}
+
+model capillarities {
+  id                      Int        @id @default(autoincrement())
+  distance_init           Int?       @default(0)
+  multiplier_client       Int?       @default(0)
+  multiplier_specialist   Int?       @default(0)
+  distance_end            Int?       @default(0)
+  sla                     Int?
+  feeding_client          Float?
+  displacement_client     Float?
+  hour_client             Float?
+  hour_specialist         Float?
+  lodging_client          Float?
+  feeding_specialist      Float?
+  displacement_specialist Float?
+  lodging_specialist      Float?
+  contract_id             Int?
+  created                 DateTime?  @db.DateTime(0)
+  modified                DateTime?  @db.DateTime(0)
+  contracts               contracts? @relation(fields: [contract_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_capillarities_contracts")
+
+  @@index([contract_id], map: "contract_id")
+}
+
+model changelogs {
+  id        Int                   @id @default(autoincrement())
+  text      String                @db.Text
+  user_type changelogs_user_type?
+  created   DateTime?             @db.DateTime(0)
+  modified  DateTime?             @db.DateTime(0)
+}
+
+model charges {
+  id             Int        @id @default(autoincrement())
+  name           String?    @db.VarChar(250)
+  description    String?    @db.Text
+  value          Int?
+  price          Float?
+  validity       DateTime?  @db.Date
+  init_date      DateTime?  @db.Date
+  contract_id    Int?
+  active         Boolean?   @default(true)
+  created        DateTime?  @db.DateTime(0)
+  modified       DateTime?  @db.DateTime(0)
+  paid_up_debit  Boolean?   @default(false)
+  balance        Int?
+  user_create_id Int?
+  unit_price     Float?
+  contracts      contracts? @relation(fields: [contract_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_charges_contracts")
+  users          users?     @relation(fields: [user_create_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_charges_users")
+
+  @@index([contract_id], map: "contract_id")
+  @@index([user_create_id], map: "user_create_id")
+}
+
+model chats {
+  id                              Int       @id @default(autoincrement())
+  sender_id                       Int
+  recipient_id                    Int
+  dialog_id                       Int
+  active                          Boolean   @default(true)
+  created                         DateTime? @db.Timestamp(0)
+  modified                        DateTime? @db.Timestamp(0)
+  dialogues                       dialogues @relation(fields: [dialog_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_chats_dialogues1")
+  users_chats_recipient_idTousers users     @relation("chats_recipient_idTousers", fields: [recipient_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_chats_users2")
+  users_chats_sender_idTousers    users     @relation("chats_sender_idTousers", fields: [sender_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_chats_users1")
+
+  @@index([dialog_id], map: "fk_chats_dialogues1_idx")
+  @@index([sender_id], map: "fk_chats_users1_idx")
+  @@index([recipient_id], map: "fk_chats_users2_idx")
+}
+
+model checklist_item_options {
+  id                Int              @id @default(autoincrement())
+  name              String?          @db.VarChar(100)
+  checklist_item_id Int?
+  created           DateTime         @default(now()) @db.Timestamp(0)
+  modified          DateTime         @default(now()) @db.Timestamp(0)
+  checklist_items   checklist_items? @relation(fields: [checklist_item_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_checklist_options_checklists_items")
+
+  @@index([checklist_item_id], map: "FK_checklist_options_checklists_items")
+}
+
+model checklist_items {
+  id                     Int                      @id @default(autoincrement())
+  name                   String?                  @db.Text
+  description            String?                  @db.VarChar(150)
+  type                   String?                  @db.VarChar(50)
+  uuid                   String?                  @db.VarChar(100)
+  options                String?                  @db.Text
+  checklist_id           Int?
+  position               Int?
+  active                 Boolean?                 @default(true)
+  created                DateTime                 @default(now()) @db.Timestamp(0)
+  modified               DateTime                 @default(now()) @db.Timestamp(0)
+  required               Boolean                  @default(false)
+  checklists             checklists?              @relation(fields: [checklist_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_checklist_items_checklists")
+  checklist_item_options checklist_item_options[]
+
+  @@index([checklist_id], map: "FK_checklist_items_checklists")
+}
+
+model checklists {
+  id                   Int                    @id @default(autoincrement())
+  name                 String                 @db.VarChar(80)
+  description          String?                @db.Text
+  enterprise_id        Int?
+  active               Boolean                @default(true)
+  created              DateTime               @default(now()) @db.Timestamp(0)
+  modified             DateTime               @default(now()) @db.Timestamp(0)
+  identifier           String?                @db.VarChar(255)
+  private              Boolean                @default(false)
+  latest               Boolean?               @default(true)
+  version              Int?
+  initial_date         DateTime?              @db.Date
+  final_date           DateTime?              @db.Date
+  auto_add             Boolean                @default(false)
+  checklist_items      checklist_items[]
+  contracts_checklists contracts_checklists[]
+  occurrences          occurrences[]
+}
+
+model cities {
+  id                       Int                    @id @default(autoincrement())
+  name                     String?                @db.VarChar(45)
+  nerby_city_distance      Int?
+  nerby_city_distance_time Int?
+  nerby_city_id            Int?
+  state_id                 Int
+  region_id                Int?
+  active                   Boolean                @default(true)
+  need_tech                Boolean                @default(false)
+  created                  DateTime?              @db.Timestamp(0)
+  modified                 DateTime?              @db.Timestamp(0)
+  timezone                 String?                @db.VarChar(100)
+  population               Int?
+  lat                      Float?
+  lng                      Float?
+  cities                   cities?                @relation("citiesTocities_nerby_city_id", fields: [nerby_city_id], references: [id], onUpdate: SetNull, map: "FK_cities_cities")
+  regions                  regions?               @relation(fields: [region_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_cities_regions1")
+  states                   states                 @relation(fields: [state_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_cities_states1")
+  addresses                addresses[]
+  other_cities             cities[]               @relation("citiesTocities_nerby_city_id")
+  holidays                 holidays[]
+  proposed_occurrences     proposed_occurrences[]
+
+  @@index([nerby_city_id], map: "FK_cities_cities")
+  @@index([region_id], map: "fk_cities_regions1_idx")
+  @@index([state_id], map: "fk_cities_states1_idx")
+}
+
+model cities_services {
+  id         Int      @id @default(autoincrement())
+  city_id    Int
+  service_id Int
+  created    DateTime @default(now()) @db.DateTime(0)
+  modified   DateTime @default(now()) @db.DateTime(0)
+}
+
+model collects {
+  id             Int                     @id @default(autoincrement())
+  contract_id    Int
+  credit_card_id Int?
+  transaction_id String?                 @db.VarChar(30)
+  user_id        Int?
+  date           DateTime                @db.Date
+  validity       DateTime?               @db.Date
+  status         collects_status?        @default(UNPAID)
+  ticket_url     String?                 @db.VarChar(255)
+  ticket_barcode String?                 @db.VarChar(255)
+  created        DateTime                @default(now()) @db.DateTime(0)
+  modified       DateTime                @default(now()) @db.DateTime(0)
+  payment_method collects_payment_method
+  up_quantity    Int?
+  up_price       Float?
+  contracts      contracts               @relation(fields: [contract_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_collects_contracts")
+  credit_cards   credit_cards?           @relation(fields: [credit_card_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_collects_credit_cards")
+  users          users?                  @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_collects_users")
+
+  @@index([contract_id], map: "contract_id")
+  @@index([credit_card_id], map: "credit_card_id")
+  @@index([user_id], map: "user_id")
+}
+
+model comments {
+  id               Int          @id @default(autoincrement())
+  user_id          Int
+  occurrence_id    Int?
+  text             String       @db.Text
+  active           Boolean?     @default(true)
+  created          DateTime?    @db.Timestamp(0)
+  modified         DateTime?    @db.Timestamp(0)
+  user_comment_id  Int?
+  contract_id      Int?
+  reason_blacklist String?      @db.Text
+  contracts        contracts?   @relation(fields: [contract_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_comments_contracts")
+  occurrences      occurrences? @relation(fields: [occurrence_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_comments_occurrences1")
+  users            users        @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_comments_users1")
+
+  @@index([contract_id], map: "contract_id")
+  @@index([occurrence_id], map: "fk_comments_occurrences1_idx")
+  @@index([user_id], map: "fk_comments_users1_idx")
+}
+
+model configurations {
+  id            Int          @id @default(autoincrement())
+  user_id       Int?
+  config_key    String?      @db.VarChar(100)
+  config_value  String?      @db.Text
+  public        Boolean?     @default(false)
+  active        Boolean?
+  created       DateTime?    @db.Timestamp(0)
+  modified      DateTime?    @db.Timestamp(0)
+  enterprise_id Int?
+  enterprises   enterprises? @relation(fields: [enterprise_id], references: [id], onDelete: Cascade, map: "fk_enterprises_configurations")
+  users         users?       @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_configurations_users1")
+
+  @@index([user_id], map: "fk_configurations_users1_idx")
+  @@index([enterprise_id], map: "fk_enterprises_configurations")
+}
+
+model contracts {
+  id                                                     Int                      @id @default(autoincrement())
+  contract_omie                                          String?                  @db.VarChar(45)
+  os_omie                                                String?                  @db.VarChar(45)
+  name                                                   String?                  @db.VarChar(50)
+  enterprise_id                                          Int?
+  payment_type                                           contracts_payment_type   @default(PREPAID)
+  initial_date                                           DateTime                 @db.Date
+  final_date                                             DateTime?                @db.Date
+  opening_hour                                           DateTime?                @db.Time(0)
+  ending_hour                                            DateTime?                @db.Time(0)
+  monday                                                 Boolean                  @default(true)
+  tuesday                                                Boolean                  @default(true)
+  wednesday                                              Boolean                  @default(true)
+  thursday                                               Boolean                  @default(true)
+  friday                                                 Boolean                  @default(true)
+  saturday                                               Boolean                  @default(true)
+  sunday                                                 Boolean                  @default(true)
+  holiday                                                Boolean                  @default(true)
+  filepath                                               String?                  @db.Text
+  boleto_validated_days                                  Int?                     @default(3)
+  boleto_payment_charge                                  Int?                     @default(0) @db.TinyInt
+  internal_price                                         Float?                   @default(0)
+  type                                                   contracts_type
+  status                                                 contracts_status?
+  cumulative                                             Int?                     @default(0)
+  active                                                 Boolean                  @default(true)
+  is_digital_buy                                         Boolean?                 @default(false)
+  closed_scope                                           Boolean?                 @default(false)
+  created                                                DateTime?                @db.Timestamp(0)
+  modified                                               DateTime?                @db.Timestamp(0)
+  overdraft                                              Int?                     @default(0)
+  enterprises_contracts_enterprise_idToenterprises       enterprises?             @relation("contracts_enterprise_idToenterprises", fields: [enterprise_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_contracts_enterprises1")
+  capillarities                                          capillarities[]
+  charges                                                charges[]
+  collects                                               collects[]
+  comments                                               comments[]
+  contracts_checklists                                   contracts_checklists[]
+  contracts_tools                                        contracts_tools[]
+  cost_centers_contracts                                 cost_centers_contracts[]
+  credits                                                credits[]
+  enterprises_contractsToenterprises_primary_contract_id enterprises[]            @relation("contractsToenterprises_primary_contract_id")
+  extracts                                               extracts[]
+  funds                                                  funds[]
+  services_contracts                                     services_contracts[]
+
+  @@index([enterprise_id], map: "fk_contracts_enterprises1_idx")
+}
+
+model contracts_checklists {
+  id           Int        @id @default(autoincrement())
+  contract_id  Int
+  checklist_id Int
+  created      DateTime   @default(now()) @db.DateTime(0)
+  modified     DateTime   @default(now()) @db.DateTime(0)
+  checklists   checklists @relation(fields: [checklist_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_contracts_checklists_checklists")
+  contracts    contracts  @relation(fields: [contract_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_contracts_checklists_contracts")
+
+  @@index([checklist_id], map: "FK_contracts_checklists_checklists")
+  @@index([contract_id], map: "FK_contracts_checklists_contracts")
+}
+
+model contracts_tools {
+  id          Int       @id @default(autoincrement())
+  tool_id     Int
+  service_id  Int?
+  contract_id Int
+  description String?   @db.VarChar(45)
+  active      Boolean?
+  created     DateTime? @db.Timestamp(0)
+  modified    DateTime? @db.Timestamp(0)
+  contracts   contracts @relation(fields: [contract_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "contracts_tools_contract_id_foreign")
+  services    services? @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_contracts_tools_services1")
+
+  @@index([contract_id], map: "fk_contracts_tools_contracts1_idx")
+  @@index([service_id], map: "fk_contracts_tools_services1_idx")
+  @@index([tool_id], map: "fk_contracts_tools_tools1_idx")
+}
+
+model cost_centers {
+  id                     Int                      @id @default(autoincrement())
+  enterprise_id          Int
+  name                   String?                  @db.VarChar(50)
+  up_limit               Int?
+  use_plan               Boolean?                 @default(false)
+  created                DateTime?                @default(now()) @db.DateTime(0)
+  modified               DateTime?                @default(now()) @db.DateTime(0)
+  active                 Boolean                  @default(true)
+  enterprises            enterprises              @relation(fields: [enterprise_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_cost_centers_enterprises")
+  cost_centers_contracts cost_centers_contracts[]
+  cost_centers_users     cost_centers_users[]
+
+  @@index([enterprise_id], map: "FK_cost_centers_enterprises")
+}
+
+model cost_centers_contracts {
+  id             Int          @id @default(autoincrement())
+  contract_id    Int
+  cost_center_id Int
+  up_usage       Int?
+  use_project    Boolean?     @default(false)
+  created        DateTime?    @default(now()) @db.DateTime(0)
+  modified       DateTime?    @default(now()) @db.DateTime(0)
+  contracts      contracts    @relation(fields: [contract_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "cost_centers_contracts_ibfk_2")
+  cost_centers   cost_centers @relation(fields: [cost_center_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "cost_centers_contracts_ibfk_1")
+
+  @@index([cost_center_id], map: "cost_centers_contracts_ibfk_1")
+  @@index([contract_id], map: "cost_centers_contracts_ibfk_2")
+}
+
+model cost_centers_users {
+  id             Int          @id @default(autoincrement())
+  user_id        Int
+  cost_center_id Int
+  created        DateTime?    @default(now()) @db.DateTime(0)
+  modified       DateTime?    @default(now()) @db.DateTime(0)
+  cost_centers   cost_centers @relation(fields: [cost_center_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_cost_centers_users_cost_centers")
+  users          users        @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_cost_centers_users_users")
+
+  @@index([cost_center_id], map: "FK_cost_centers_users_cost_centers")
+  @@index([user_id], map: "FK_cost_centers_users_users")
+}
+
+model costs_templates {
+  id                BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  range_label       Int
+  sla               Int      @default(0)
+  feeding_cost      Float    @default(0.00)
+  lodging_cost      Float    @default(0.00)
+  displacement_cost Float    @default(0.00)
+  hour_cost         Float    @default(40.00)
+  created           DateTime @db.DateTime(0)
+  modified          DateTime @db.DateTime(0)
+  report_id         BigInt   @db.UnsignedBigInt
+  reports           reports  @relation(fields: [report_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "fk_report_id_foreign")
+
+  @@index([report_id], map: "costs_templates_report_id_index")
+}
+
+model countries {
+  id        Int         @id @default(autoincrement())
+  name      String      @db.VarChar(45)
+  abbrv     String      @db.VarChar(4)
+  active    Boolean     @default(true)
+  created   DateTime?   @db.Timestamp(0)
+  modified  DateTime?   @db.Timestamp(0)
+  currency  String?     @db.VarChar(10)
+  addresses addresses[]
+  holidays  holidays[]
+  states    states[]
+}
+
+model coupons {
+  id                                       Int              @id @default(autoincrement())
+  value                                    Float
+  amount                                   Int?
+  initial_date                             DateTime?        @db.Date
+  final_date                               DateTime?        @db.Date
+  code                                     String           @db.VarChar(45)
+  type                                     coupons_type
+  use_mode                                 coupons_use_mode @default(ALL)
+  bonus_value                              String?          @db.VarChar(45)
+  beneficiary_user_id                      Int?
+  created_user_id                          Int?
+  total                                    Boolean?         @default(false)
+  active                                   Boolean          @default(true)
+  created                                  DateTime?        @db.Timestamp(0)
+  modified                                 DateTime?        @db.Timestamp(0)
+  users_coupons_beneficiary_user_idTousers users?           @relation("coupons_beneficiary_user_idTousers", fields: [beneficiary_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_coupons_users1")
+  users_coupons_created_user_idTousers     users?           @relation("coupons_created_user_idTousers", fields: [created_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_coupons_users2")
+  occurrences                              occurrences[]
+
+  @@index([beneficiary_user_id], map: "fk_coupons_users1_idx")
+  @@index([created_user_id], map: "fk_coupons_users2_idx")
+}
+
+model courses {
+  id             Int             @id @default(autoincrement())
+  video_code     String          @db.VarChar(50)
+  name           String          @db.VarChar(250)
+  video_duration Float           @default(0)
+  active         Boolean         @default(true)
+  created        DateTime        @default(now()) @db.DateTime(0)
+  modified       DateTime        @default(now()) @db.DateTime(0)
+  courses_users  courses_users[]
+  questions      questions[]
+}
+
+model courses_users {
+  id          Int       @id @default(autoincrement())
+  user_id     Int?
+  course_id   Int?
+  created     DateTime? @db.DateTime(0)
+  modified    DateTime? @db.DateTime(0)
+  video_time  String?   @db.VarChar(50)
+  note_course Int?
+  rating      Int?
+  review      String?   @db.VarChar(300)
+  courses     courses?  @relation(fields: [course_id], references: [id], onDelete: Cascade, map: "FK__courses")
+  users       users?    @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "FK__users")
+
+  @@index([course_id], map: "course_id")
+  @@index([user_id], map: "user_id")
+}
+
+model created_links {
+  id                                    Int          @id @default(autoincrement()) @db.UnsignedInt
+  name                                  String?      @db.Text
+  enterprise_id                         Int?
+  token                                 String?      @db.LongText
+  user_id                               Int
+  created                               DateTime     @default(now()) @db.Timestamp(0)
+  modified                              DateTime     @default(now()) @db.Timestamp(0)
+  deleted_at                            DateTime?    @db.Timestamp(0)
+  deleted_by                            Int?
+  users_created_links_deleted_byTousers users?       @relation("created_links_deleted_byTousers", fields: [deleted_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "created_links_deleted_by_foreign")
+  enterprises                           enterprises? @relation(fields: [enterprise_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "created_links_enterprise_id_foreign")
+  users_created_links_user_idTousers    users        @relation("created_links_user_idTousers", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "created_links_user_id_foreign")
+
+  @@index([deleted_by], map: "created_links_deleted_by_foreign")
+  @@index([enterprise_id], map: "created_links_enterprise_id_foreign")
+  @@index([user_id], map: "created_links_user_id_foreign")
+}
+
+model credit_cards {
+  id              Int          @id @default(autoincrement())
+  user_id         Int?
+  enterprise_id   Int?
+  card_id         String       @db.VarChar(100)
+  brand           String       @db.VarChar(50)
+  holder_name     String       @db.VarChar(50)
+  first_digits    Int
+  last_digits     Int
+  country         String?      @db.VarChar(50)
+  valid           Boolean      @default(true)
+  expiration_date Int
+  active          Boolean      @default(true)
+  created         DateTime     @default(now()) @db.DateTime(0)
+  modified        DateTime     @default(now()) @db.DateTime(0)
+  enterprises     enterprises? @relation(fields: [enterprise_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_credit_cards_enterprises")
+  users           users?       @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_credit_cards_users")
+  collects        collects[]
+
+  @@index([enterprise_id], map: "enterprise_id")
+  @@index([user_id], map: "user_id")
+}
+
+model credits {
+  id                 Int                  @id @default(autoincrement())
+  name               String               @db.VarChar(45)
+  description        String?              @db.Text
+  initial_date       DateTime?            @db.Date
+  final_date         DateTime?            @db.Date
+  creditor_id        Int
+  contract_id        Int
+  active             Boolean              @default(true)
+  created            DateTime?            @db.Timestamp(0)
+  modified           DateTime?            @db.Timestamp(0)
+  contracts          contracts            @relation(fields: [contract_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_credits_contracts1")
+  users              users                @relation(fields: [creditor_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_credits_users1")
+  account_statements account_statements[]
+
+  @@index([contract_id], map: "fk_credits_contracts1_idx")
+  @@index([creditor_id], map: "fk_credits_users1_idx")
+}
+
+model dashboards {
+  id               BigInt             @id @default(autoincrement()) @db.UnsignedBigInt
+  name             String             @db.VarChar(255)
+  url              String             @db.Text
+  enterprise_id    Int
+  created_user_id  Int
+  created_at       DateTime?          @db.Timestamp(0)
+  updated_at       DateTime?          @db.Timestamp(0)
+  users            users              @relation(fields: [created_user_id], references: [id], onDelete: Cascade, map: "fk_created_user_dashboards")
+  enterprises      enterprises        @relation(fields: [enterprise_id], references: [id], onDelete: Cascade, map: "fk_enterprise_dashboards")
+  users_dashboards users_dashboards[]
+
+  @@index([created_user_id], map: "fk_created_user_dashboards")
+  @@index([enterprise_id], map: "fk_enterprise_dashboards")
+}
+
+model devices {
+  id                   Int                    @id @default(autoincrement()) @db.UnsignedInt
+  serial               String?                @db.Text
+  number_patrimony     String?                @db.Text
+  is_change_equipment  Int                    @default(0)
+  new_serial           String?                @db.Text
+  new_number_patrimony String?                @db.Text
+  mac_number           String?                @db.Text
+  ip_number            String?                @db.Text
+  have_backup          Int                    @default(0)
+  created              DateTime?              @db.Timestamp(0)
+  modified             DateTime?              @db.Timestamp(0)
+  hostname             String?                @db.Text
+  occurrences_services occurrences_services[]
+}
+
+model dialogues {
+  id       Int            @id @default(autoincrement())
+  text     String         @db.Text
+  type     dialogues_type
+  active   Boolean        @default(true)
+  created  DateTime?      @db.Timestamp(0)
+  modified DateTime?      @db.Timestamp(0)
+  chats    chats[]
+}
+
+model disabled_reasons {
+  id            Int          @id @default(autoincrement())
+  user_id       Int?
+  enterprise_id Int?
+  disabled_date DateTime?    @db.DateTime(0)
+  reason        String?      @db.Text
+  active        Boolean      @default(true)
+  created       DateTime?    @db.Timestamp(0)
+  modified      DateTime?    @db.Timestamp(0)
+  enterprises   enterprises? @relation(fields: [enterprise_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_disabled_reasons_enterprises1")
+  users         users?       @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_disabled_reasons_users1")
+
+  @@index([enterprise_id], map: "fk_disabled_reasons_enterprises1_idx")
+  @@index([user_id], map: "fk_disabled_reasons_users1_idx")
+}
+
+model documents {
+  id            Int                 @id @default(autoincrement())
+  individual_id Int
+  name          String?             @db.VarChar(45)
+  description   String?             @db.Text
+  filepath      String?             @db.Text
+  file_type     String?             @default("") @db.VarChar(45)
+  active        Boolean?            @default(true)
+  created       DateTime?           @db.DateTime(0)
+  approved      documents_approved? @default(VALIDATION)
+  modified      DateTime?           @db.DateTime(0)
+  firebase_ref  String?             @db.Text
+  size          Int?
+  individuals   individuals         @relation(fields: [individual_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_documents_individuals1")
+
+  @@index([individual_id], map: "fk_documents_individuals1_idx")
+}
+
+model educations {
+  id             Int         @id @default(autoincrement())
+  individual_id  Int
+  course_type    String?     @db.VarChar(20)
+  course_name    String?     @db.VarChar(50)
+  institution    String?     @db.VarChar(40)
+  course_country String?     @db.VarChar(50)
+  course_state   String?     @db.VarChar(50)
+  course_status  String?     @db.VarChar(30)
+  details        String?     @db.VarChar(80)
+  initial_date   DateTime?   @db.Date
+  final_date     DateTime?   @db.Date
+  created        DateTime?   @default(now()) @db.DateTime(0)
+  modified       DateTime?   @default(now()) @db.DateTime(0)
+  individuals    individuals @relation(fields: [individual_id], references: [id], onDelete: Cascade, map: "FK_educations_individuals")
+
+  @@index([individual_id], map: "individual_id")
+}
+
+model email_notifications {
+  id        Int       @id @default(autoincrement())
+  type      String?   @db.VarChar(45)
+  sent      Boolean   @default(false)
+  model     String?   @db.VarChar(45)
+  model_id  String?   @db.VarChar(45)
+  update_at DateTime? @db.Timestamp(0)
+  active    Boolean   @default(true)
+  created   DateTime? @db.Timestamp(0)
+  modified  DateTime? @db.Timestamp(0)
+}
+
+model enterprise_features {
+  id                             BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  enterprise_id                  Int
+  invalid_accumulated            Int      @default(0)
+  canceled_accumulated           Int      @default(0)
+  rescheduled_total_accumulated  Int      @default(0)
+  rescheduled_findup_accumulated Int      @default(0)
+  rescheduled_client_accumulated Int      @default(0)
+  rejected_accumulated           Int      @default(0)
+  occurrences_accumulated        Int      @default(0)
+  date                           DateTime @db.DateTime(0)
+  created                        DateTime @db.DateTime(0)
+  modified                       DateTime @db.DateTime(0)
+  unproductive_accumulated       Int      @default(0)
+  users                          users    @relation(fields: [enterprise_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "enterprise_id_fk")
+
+  @@index([enterprise_id], map: "enterprise_features_enterprise_id_index")
+}
+
+model enterprises {
+  id                                                            Int                          @id @default(autoincrement())
+  name                                                          String?                      @db.VarChar(255)
+  logo                                                          String?                      @db.Text
+  beta                                                          Boolean                      @default(false)
+  cnpj                                                          String?                      @db.VarChar(14)
+  ie                                                            String?                      @db.VarChar(25)
+  uuid                                                          String?                      @db.VarChar(255)
+  homepage                                                      String?                      @db.Text
+  email                                                         String?                      @db.VarChar(75)
+  corporate_name                                                String?                      @db.VarChar(255)
+  validated                                                     Boolean?                     @default(false)
+  has_internal_technicians                                      Boolean?                     @default(false)
+  has_priority_technicians                                      Boolean?                     @default(false)
+  has_payment_ups                                               Boolean?                     @default(false)
+  has_capillarity_calc                                          Boolean?                     @default(false)
+  has_real_dashboard                                            Boolean?                     @default(false)
+  has_checklists                                                Boolean?                     @default(false)
+  markup_1                                                      Float?                       @default(2.5)
+  markup_50                                                     Float?                       @default(2)
+  markup_150                                                    Float?                       @default(1.5)
+  validated_by                                                  Int?
+  responsible_id                                                Int?
+  type                                                          enterprises_type?
+  type_occurrence                                               enterprises_type_occurrence?
+  active                                                        Boolean                      @default(true)
+  created                                                       DateTime?                    @db.Timestamp(0)
+  created_user_id                                               Int?
+  primary_contract_id                                           Int?
+  modified                                                      DateTime?                    @db.Timestamp(0)
+  displacement_limit                                            Float?                       @default(0)
+  cs_user_id                                                    Int?
+  users_enterprises_created_user_idTousers                      users?                       @relation("enterprises_created_user_idTousers", fields: [created_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_enterprises_users")
+  users_enterprises_cs_user_idTousers                           users?                       @relation("enterprises_cs_user_idTousers", fields: [cs_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "enterprises_cs_user_id_foreign")
+  contracts_contractsToenterprises_primary_contract_id          contracts?                   @relation("contractsToenterprises_primary_contract_id", fields: [primary_contract_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_enterprises_contracts")
+  users_enterprises_validated_byTousers                         users?                       @relation("enterprises_validated_byTousers", fields: [validated_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_enterprises_users1")
+  addresses                                                     addresses[]
+  blacklist_technicians                                         blacklist_technicians[]
+  configurations                                                configurations[]
+  contracts_contracts_enterprise_idToenterprises                contracts[]                  @relation("contracts_enterprise_idToenterprises")
+  cost_centers                                                  cost_centers[]
+  created_links                                                 created_links[]
+  credit_cards                                                  credit_cards[]
+  dashboards                                                    dashboards[]
+  disabled_reasons                                              disabled_reasons[]
+  enterprises_discounts                                         enterprises_discounts[]
+  extracts                                                      extracts[]
+  invoices                                                      invoices[]
+  models                                                        models[]
+  occurrences_enterprisesTooccurrences_corporate_id             occurrences[]                @relation("enterprisesTooccurrences_corporate_id")
+  occurrences_enterprisesTooccurrences_specialist_enterprise_id occurrences[]                @relation("enterprisesTooccurrences_specialist_enterprise_id")
+  phones                                                        phones[]
+  priority_technicians                                          priority_technicians[]
+  roles                                                         roles[]
+  users_enterprisesTousers_enterprise_id                        users[]                      @relation("enterprisesTousers_enterprise_id")
+
+  @@index([created_user_id], map: "created_user_id")
+  @@index([cs_user_id], map: "enterprises_cs_user_id_foreign")
+  @@index([validated_by], map: "fk_enterprises_users1_idx")
+  @@index([primary_contract_id], map: "primary_contract_id")
+}
+
+model enterprises_discounts {
+  id            Int         @id @default(autoincrement())
+  enterprise_id Int
+  discount1     Float?      @default(0)
+  discount2     Float?
+  discount3     Float?
+  discount4     Float?
+  discount5     Float?
+  discount6     Float?
+  discount7     Float?
+  discount8     Float?
+  discount9     Float?
+  discount10    Float?
+  created       DateTime    @db.DateTime(0)
+  modified      DateTime    @db.DateTime(0)
+  enterprises   enterprises @relation(fields: [enterprise_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_enterprises_discounts_enterprises")
+
+  @@index([enterprise_id], map: "FK_enterprises_discounts_enterprises")
+}
+
+model extracts {
+  id            Int           @id @default(autoincrement())
+  fund_id       Int?
+  contract_id   Int?
+  enterprise_id Int?
+  fund_month_id Int?
+  occurrence_id Int?
+  tag           String?       @db.VarChar(150)
+  description   String?       @db.Text
+  date          DateTime?     @db.DateTime(0)
+  income        Float?
+  expense       Float?
+  balance       Int?
+  active        Boolean?      @default(true)
+  created       DateTime?     @db.Timestamp(0)
+  modified      DateTime?     @db.Timestamp(0)
+  validity      DateTime?     @db.DateTime(0)
+  value         Int?
+  charge_id     Int?
+  contracts     contracts?    @relation(fields: [contract_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_extracts_contracts1")
+  enterprises   enterprises?  @relation(fields: [enterprise_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_extracts_enterprises1")
+  funds         funds?        @relation(fields: [fund_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_extracts_funds1")
+  funds_months  funds_months? @relation(fields: [fund_month_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_extracts_funds_months1")
+  occurrences   occurrences?  @relation(fields: [occurrence_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_extracts_occurrences1")
+
+  @@index([charge_id], map: "charge_id")
+  @@index([contract_id], map: "fk_extracts_contracts1_idx")
+  @@index([enterprise_id], map: "fk_extracts_enterprises1_idx")
+  @@index([fund_id], map: "fk_extracts_funds1_idx")
+  @@index([fund_month_id], map: "fk_extracts_funds_months1_idx")
+  @@index([occurrence_id], map: "fk_extracts_occurrences1_idx")
+}
+
+model failed_jobs {
+  id         BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  uuid       String   @unique(map: "failed_jobs_uuid_unique") @db.VarChar(255)
+  connection String   @db.Text
+  queue      String   @db.Text
+  payload    String   @db.LongText
+  exception  String   @db.LongText
+  failed_at  DateTime @default(now()) @db.Timestamp(0)
+}
+
+model faqs {
+  id          Int       @id @default(autoincrement())
+  question    String    @db.VarChar(255)
+  description String    @db.Text
+  type        faqs_type
+  active      Boolean   @default(true)
+  created     DateTime? @db.Timestamp(0)
+  modified    DateTime? @db.Timestamp(0)
+}
+
+model favorite_specialists {
+  id                                              Int       @id @default(autoincrement())
+  user_id                                         Int
+  specialist_id                                   Int
+  active                                          Boolean   @default(true)
+  created                                         DateTime? @db.Timestamp(0)
+  modified                                        DateTime? @db.Timestamp(0)
+  users_favorite_specialists_specialist_idTousers users     @relation("favorite_specialists_specialist_idTousers", fields: [specialist_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_favorite_specialists_users2")
+  users_favorite_specialists_user_idTousers       users     @relation("favorite_specialists_user_idTousers", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_favorite_specialists_users1")
+
+  @@index([user_id], map: "fk_favorite_specialists_users1_idx")
+  @@index([specialist_id], map: "fk_favorite_specialists_users2_idx")
+}
+
+model fluffy_migrations {
+  id        Int    @id @default(autoincrement()) @db.UnsignedInt
+  migration String @db.VarChar(255)
+  batch     Int
+}
+
+model funds {
+  id                            Int                     @id @default(autoincrement())
+  contract_id                   Int
+  month_points                  Int?
+  month_expense                 Int?
+  total_points_quantity         Int                     @default(0)
+  credit_balance                Float                   @default(0)
+  unique_point_value            Float
+  max_extra_points_quantity     Int?                    @default(0)
+  max_extra_point_value         Float?
+  displacement_value            Float?
+  total_expense                 Float?                  @default(0)
+  monthly_limit                 Int?
+  specialist_base_price         Float?
+  specialist_extra_price        Float?
+  credit_day                    Int?                    @default(1)
+  last_credit                   DateTime?               @db.Date
+  contract_days                 Int?
+  type                          funds_type              @default(DETACHED)
+  contract_charges              funds_contract_charges?
+  contract_period_value         Float?
+  auto_payment                  Boolean?                @default(false)
+  points_days_validity          Int?
+  active                        Boolean                 @default(true)
+  total_value_quantity          Float                   @default(0)
+  total_value_quantity_cost     Float                   @default(0)
+  value_per_period              Float?
+  payment_method                funds_payment_method?
+  payment_period                funds_payment_period?
+  remote_base_price             Decimal                 @default(0.00) @db.Decimal(10, 2)
+  remote_base_time              Int                     @default(0)
+  remote_extra_price            Decimal                 @default(0.00) @db.Decimal(10, 2)
+  remote_extra_time             Int                     @default(0)
+  specialist_remote_base_price  Decimal                 @default(0.00) @db.Decimal(10, 2)
+  specialist_remote_base_time   Int                     @default(0)
+  specialist_remote_extra_price Decimal                 @default(0.00) @db.Decimal(10, 2)
+  specialist_remote_extra_time  Int                     @default(0)
+  created                       DateTime?               @db.Timestamp(0)
+  modified                      DateTime?               @db.Timestamp(0)
+  contracts                     contracts               @relation(fields: [contract_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_values_contracts1")
+  extracts                      extracts[]
+  funds_months                  funds_months[]
+
+  @@index([contract_id], map: "fk_values_contracts1_idx")
+}
+
+model funds_months {
+  id                     Int        @id @default(autoincrement())
+  fund_id                Int
+  stored_points          Int        @default(0)
+  stored_points_expense  Int        @default(0)
+  additive_points        Int?       @default(0)
+  initial_date           DateTime   @db.DateTime(0)
+  final_date             DateTime   @db.DateTime(0)
+  stored_points_validity DateTime?  @db.DateTime(0)
+  accumulated_points     Int?       @default(0)
+  total_points_quantity  Int?       @default(0)
+  total_expense          Int        @default(0)
+  spare_points           Int        @default(0)
+  owed_points            Int?       @default(0)
+  depleted               Boolean    @default(false)
+  active                 Boolean    @default(true)
+  created                DateTime?  @db.Timestamp(0)
+  modified               DateTime?  @db.Timestamp(0)
+  funds                  funds      @relation(fields: [fund_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_fundsMonths_funds1")
+  extracts               extracts[]
+
+  @@index([fund_id], map: "fk_fundsMonths_funds1_idx")
+}
+
+model gateway_clients {
+  id              BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  client_id       String    @unique(map: "gateway_clients_client_id_unique") @db.VarChar(125)
+  client_password String    @db.Text
+  created_at      DateTime? @db.Timestamp(0)
+  updated_at      DateTime? @db.Timestamp(0)
+  deleted_at      DateTime? @db.Timestamp(0)
+}
+
+model gateway_tokens {
+  id                BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  gateway_client_id Int       @db.UnsignedInt
+  token             String    @unique(map: "gateway_tokens_token_unique") @db.VarChar(225)
+  type              String    @db.VarChar(80)
+  is_revoked        Boolean   @default(false)
+  created_at        DateTime? @db.Timestamp(0)
+  updated_at        DateTime? @db.Timestamp(0)
+
+  @@index([gateway_client_id], map: "gateway_tokens_gateway_client_id_index")
+}
+
+model historics {
+  id                    Int         @id @default(autoincrement())
+  user_id               Int?
+  occurrence_id         Int
+  description           String?     @db.Text
+  reason                String?     @db.Text
+  active                Boolean     @default(true)
+  created               DateTime?   @db.DateTime(0)
+  modified              DateTime?   @db.DateTime(0)
+  operator_user_id      Int?
+  operator              Boolean     @default(false)
+  client                Boolean     @default(false)
+  specialist            Boolean     @default(false)
+  probability_rejected  Float?
+  temperature           String?     @db.VarChar(255)
+  weather               String?     @db.VarChar(255)
+  synchronized          Int         @default(0)
+  synchronized_date     DateTime    @default(now()) @db.Timestamp(0)
+  occurrence_service_id Int?
+  occurrences           occurrences @relation(fields: [occurrence_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_historics_occurrences1")
+  users                 users?      @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_historics_users1")
+
+  @@index([occurrence_id], map: "fk_historics_occurrences1_idx")
+  @@index([user_id], map: "fk_historics_users1")
+  @@index([operator_user_id], map: "historics_operator_user_id_index")
+}
+
+model holidays {
+  id         Int        @id @default(autoincrement())
+  date       DateTime   @db.Date
+  country_id Int?
+  state_id   Int?
+  city_id    Int?
+  created    DateTime?  @db.Timestamp(0)
+  modified   DateTime?  @db.Timestamp(0)
+  active     Boolean    @default(true)
+  cities     cities?    @relation(fields: [city_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_holidays_cities1")
+  countries  countries? @relation(fields: [country_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_holidays_countries1")
+  states     states?    @relation(fields: [state_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_holidays_states1")
+
+  @@index([city_id], map: "fk_holidays_cities1_idx")
+  @@index([country_id], map: "fk_holidays_countries1_idx")
+  @@index([state_id], map: "fk_holidays_states1_idx")
+}
+
+model individuals {
+  id                       Int                        @id @default(autoincrement())
+  user_id                  Int
+  photo                    String?                    @db.Text
+  cpf                      String?                    @unique(map: "cpf_UNIQUE") @db.VarChar(11)
+  rg                       String?                    @db.VarChar(25)
+  birthdate                DateTime?                  @db.Date
+  gender                   individuals_gender?
+  show_phone               Boolean                    @default(true)
+  description              String?                    @db.Text
+  active                   String                     @default("1") @db.VarChar(45)
+  created                  DateTime?                  @db.Timestamp(0)
+  modified                 DateTime?                  @db.Timestamp(0)
+  rg_dispatcher            String?                    @db.VarChar(255)
+  hash_unique_id           String?                    @db.VarChar(80)
+  addresses                addresses[]
+  documents                documents[]
+  educations               educations[]
+  individuals_auths        individuals_auths[]
+  individuals_skills       individuals_skills[]
+  links                    links[]
+  phones                   phones[]
+  professional_experiences professional_experiences[]
+
+  @@index([user_id], map: "fk_individuals_users1_idx")
+}
+
+model individuals_auths {
+  id             Int          @id @default(autoincrement())
+  auth_id        String?      @db.VarChar(45)
+  token          String       @db.VarChar(255)
+  socialmedia_id Int
+  individual_id  Int
+  active         Boolean      @default(true)
+  created        DateTime?    @db.Timestamp(0)
+  modified       DateTime?    @db.Timestamp(0)
+  individuals    individuals  @relation(fields: [individual_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_individuals_auth_individuals1")
+  socialmedias   socialmedias @relation(fields: [socialmedia_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_individuals_auth_socialmedias1")
+
+  @@index([individual_id], map: "fk_individuals_auth_individuals1_idx")
+  @@index([socialmedia_id], map: "fk_individuals_auth_socialmedias1_idx")
+}
+
+model individuals_skills {
+  id            Int          @id @default(autoincrement())
+  level         Int?
+  nivel         String?      @db.VarChar(50)
+  skill_id      Int?
+  individual_id Int?
+  active        Boolean      @default(true)
+  created       DateTime?    @default(now()) @db.Timestamp(0)
+  modified      DateTime?    @default(now()) @db.Timestamp(0)
+  individuals   individuals? @relation(fields: [individual_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_individuals_skills_individuals1")
+  skills        skills?      @relation(fields: [skill_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_individuals_skills_skills1")
+
+  @@index([individual_id], map: "fk_individuals_skills_individuals1_idx")
+  @@index([skill_id], map: "fk_individuals_skills_skills1_idx")
+}
+
+model invoices {
+  id                                    Int             @id @default(autoincrement())
+  user_id                               Int
+  media_id                              Int?
+  enterprise_id                         Int?
+  user_cnpj                             String?         @db.VarChar(15)
+  corporate_name                        String?         @db.VarChar(45)
+  rejected_reason                       String?         @db.Text
+  date                                  DateTime?       @db.Date
+  danfe                                 String?         @db.VarChar(45)
+  value                                 Float?
+  value_occurrences                     Float?
+  status                                invoices_status @default(AWAITING_ATTACHMENT)
+  period                                String?         @db.VarChar(50)
+  extra_motivation                      String?         @db.Text
+  discount_motivation                   String?         @db.Text
+  extra_value                           Float?
+  discount_value                        Float?
+  active                                Boolean         @default(true)
+  notificated                           Boolean         @default(false)
+  user_created_id                       Int
+  created                               DateTime?       @db.Timestamp(0)
+  modified                              DateTime?       @db.Timestamp(0)
+  enterprises                           enterprises?    @relation(fields: [enterprise_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_invoices_enterprises1")
+  medias_invoices_media_idTomedias      medias?         @relation("invoices_media_idTomedias", fields: [media_id], references: [id], onUpdate: NoAction, map: "invoices_ibfk_1")
+  users_invoices_user_created_idTousers users           @relation("invoices_user_created_idTousers", fields: [user_created_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "invoices_user_created_id_foreign")
+  users_invoices_user_idTousers         users           @relation("invoices_user_idTousers", fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_invoices_users1")
+  medias_invoicesTomedias_invoice_id    medias[]        @relation("invoicesTomedias_invoice_id")
+
+  @@index([enterprise_id], map: "fk_invoices_enterprises1_idx")
+  @@index([media_id], map: "fk_invoices_medias1_idx")
+  @@index([user_id], map: "fk_invoices_users1")
+  @@index([user_created_id], map: "invoices_user_created_id_foreign")
+}
+
+model job_batches {
+  id             String  @id @db.VarChar(255)
+  name           String  @db.VarChar(255)
+  total_jobs     Int
+  pending_jobs   Int
+  failed_jobs    Int
+  failed_job_ids String  @db.Text
+  options        String? @db.Text
+  cancelled_at   Int?
+  created_at     Int
+  finished_at    Int?
+}
+
+model jobs {
+  id           BigInt @id @default(autoincrement()) @db.UnsignedBigInt
+  queue        String @db.VarChar(255)
+  payload      String @db.LongText
+  attempts     Int    @db.UnsignedTinyInt
+  reserved_at  Int?   @db.UnsignedInt
+  available_at Int    @db.UnsignedInt
+  created_at   Int    @db.UnsignedInt
+
+  @@index([queue], map: "jobs_queue_index")
+}
+
+model keywords {
+  id       BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  name     String    @db.VarChar(255)
+  created  DateTime? @db.Timestamp(0)
+  modified DateTime? @db.Timestamp(0)
+}
+
+model links {
+  id             Int          @id @default(autoincrement())
+  link           String       @db.VarChar(255)
+  socialmedia_id Int
+  individual_id  Int
+  active         Boolean      @default(true)
+  created        DateTime?    @db.Timestamp(0)
+  modified       DateTime?    @db.Timestamp(0)
+  individuals    individuals  @relation(fields: [individual_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_links_individuals1")
+  socialmedias   socialmedias @relation(fields: [socialmedia_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_links_socialmedias1")
+
+  @@index([individual_id], map: "fk_links_individuals1_idx")
+  @@index([socialmedia_id], map: "fk_links_socialmedias1_idx")
+}
+
+model medias {
+  id                                   Int                   @id @default(autoincrement())
+  user_id                              Int?
+  filepath                             String                @db.Text
+  occurrence_id                        Int?
+  invoice_id                           Int?
+  name                                 String?               @db.Text
+  type                                 medias_type?
+  validation                           medias_validation?
+  file_path                            String?               @db.VarChar(45)
+  file_type                            String?               @db.VarChar(45)
+  description                          String?               @db.Text
+  firebase_ref                         String?               @db.Text
+  size                                 Int?
+  cost                                 Float?
+  active                               Boolean               @default(true)
+  created                              DateTime?             @db.Timestamp(0)
+  modified                             DateTime?             @db.Timestamp(0)
+  occurrences_service_id               BigInt?               @db.UnsignedBigInt
+  model_id                             Int?
+  order_id                             Int?
+  invoices_invoicesTomedias_invoice_id invoices?             @relation("invoicesTomedias_invoice_id", fields: [invoice_id], references: [id], onDelete: Cascade, map: "FK_medias_invoices")
+  models                               models?               @relation(fields: [model_id], references: [id], onDelete: Cascade, map: "medias_model_id_foreign")
+  occurrences                          occurrences?          @relation(fields: [occurrence_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_medias_occurrences1")
+  occurrences_services                 occurrences_services? @relation(fields: [occurrences_service_id], references: [id], onDelete: Cascade, map: "fk_occurrences_services_medias")
+  orders                               orders?               @relation(fields: [order_id], references: [id], onDelete: Cascade, map: "medias_order_id_foreign")
+  users                                users?                @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_medias_users1")
+  invoices_invoices_media_idTomedias   invoices[]            @relation("invoices_media_idTomedias")
+
+  @@index([occurrence_id], map: "fk_medias_occurrences1_idx")
+  @@index([user_id], map: "fk_medias_users1_idx")
+  @@index([occurrences_service_id], map: "fk_occurrences_services_medias")
+  @@index([invoice_id], map: "invoice_id")
+  @@index([model_id], map: "medias_model_id_foreign")
+  @@index([order_id], map: "medias_order_id_foreign")
+}
+
+model messages {
+  id              Int           @id @default(autoincrement())
+  title           String        @db.VarChar(45)
+  body            String        @db.Text
+  thumbnail       String?       @db.VarChar(255)
+  user_id         Int?
+  type            messages_type
+  active          Boolean       @default(true)
+  created         DateTime?     @db.Timestamp(0)
+  modified        DateTime?     @db.Timestamp(0)
+  user_create_id  Int?
+  user_receive_id Int?
+  users           users?        @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_messages_users1")
+
+  @@index([user_id], map: "fk_messages_users1_idx")
+}
+
+model models {
+  id                                  Int           @id @default(autoincrement())
+  content                             String        @db.Text
+  title                               String        @db.Text
+  type                                String        @default("occurrence") @db.VarChar(50)
+  enterprise_id                       Int?
+  user_id                             Int?
+  created_user_id                     Int?
+  created                             DateTime      @db.DateTime(0)
+  modified                            DateTime      @db.DateTime(0)
+  service_id                          Int?
+  devices                             Int?          @default(0)
+  tools                               String?       @db.LongText
+  users_models_created_user_idTousers users?        @relation("models_created_user_idTousers", fields: [created_user_id], references: [id], onUpdate: SetNull, map: "FK_models_users_2")
+  enterprises                         enterprises?  @relation(fields: [enterprise_id], references: [id], onDelete: Cascade, map: "FK_models_enterprises")
+  services                            services?     @relation(fields: [service_id], references: [id], onUpdate: NoAction, map: "fk_models_service_id")
+  users_models_user_idTousers         users?        @relation("models_user_idTousers", fields: [user_id], references: [id], onUpdate: SetNull, map: "FK_models_users")
+  medias                              medias[]
+  models_tags                         models_tags[] @ignore
+
+  @@index([enterprise_id], map: "FK_models_enterprises")
+  @@index([user_id], map: "FK_models_users")
+  @@index([created_user_id], map: "FK_models_users_2")
+  @@index([service_id], map: "models_service_id_index")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client.
+model models_tags {
+  tag_id   Int
+  model_id Int
+  created  DateTime? @db.DateTime(0)
+  modified DateTime? @db.DateTime(0)
+  models   models    @relation(fields: [model_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_models_tags_model_id")
+  tags     tags      @relation(fields: [tag_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_models_tags_tag_id")
+
+  @@index([model_id], map: "models_tags_model_id_index")
+  @@index([tag_id], map: "models_tags_tag_id_index")
+  @@ignore
+}
+
+model modules {
+  id        Int      @id @default(autoincrement())
+  parent_id Int?
+  alias     String?  @db.VarChar(255)
+  created   DateTime @default(now()) @db.DateTime(0)
+  modified  DateTime @default(now()) @db.DateTime(0)
+
+  @@index([alias], map: "alias")
+}
+
+model notifications {
+  id          Int      @id @default(autoincrement())
+  template    String?  @db.VarChar(150)
+  vars        String?  @db.Text
+  user_id     Int?     @default(0)
+  state       Int?     @default(1)
+  created     DateTime @default(now()) @db.DateTime(0)
+  modified    DateTime @default(now()) @db.DateTime(0)
+  tracking_id String?  @db.Text
+  users       users[]
+}
+
+model occurrence_links {
+  id                                       Int           @id @default(autoincrement())
+  token                                    String?       @db.LongText
+  created_by                               Int
+  created                                  DateTime      @default(now()) @db.Timestamp(0)
+  modified                                 DateTime      @default(now()) @db.Timestamp(0)
+  deleted_at                               DateTime      @default(now()) @db.Timestamp(0)
+  deleted_by                               Int
+  users_occurrence_links_created_byTousers users         @relation("occurrence_links_created_byTousers", fields: [created_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "occurrence_links_created_by_foreign")
+  users_occurrence_links_deleted_byTousers users         @relation("occurrence_links_deleted_byTousers", fields: [deleted_by], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "occurrence_links_deleted_by_foreign")
+  occurrences                              occurrences[]
+
+  @@index([created_by], map: "occurrence_links_created_by_foreign")
+  @@index([deleted_by], map: "occurrence_links_deleted_by_foreign")
+}
+
+model occurrences {
+  id                                                            Int                             @id @default(autoincrement())
+  os_omie                                                       String?                         @db.VarChar(45)
+  external_os_id                                                String?                         @db.VarChar(45)
+  description                                                   String?                         @db.Text
+  solution_description                                          String?                         @db.Text
+  checkin_delay_motivation                                      String?                         @db.Text
+  checkin_photo_verify                                          String?                         @db.Text
+  schedule_time                                                 DateTime                        @db.DateTime(0)
+  first_schedule_time                                           DateTime?                       @db.DateTime(0)
+  service_alert                                                 String?                         @db.LongText
+  radius                                                        Float                           @default(70)
+  charge_id                                                     Int                             @default(70)
+  count_notifications_radius                                    Int                             @default(0)
+  technicians_target                                            occurrences_technicians_target? @default(FINDUP)
+  checklist_id                                                  Int?
+  number_devices                                                Int                             @default(1)
+  checkin_date                                                  DateTime?                       @db.DateTime(0)
+  checkin_adjustment                                            DateTime?                       @db.DateTime(0)
+  checkout_date                                                 DateTime?                       @db.DateTime(0)
+  checkout_adjustment                                           DateTime?                       @db.DateTime(0)
+  platform                                                      occurrences_platform?
+  criticality                                                   occurrences_criticality         @default(LOW)
+  backoffice_work                                               Boolean                         @default(false)
+  is_public                                                     Boolean?                        @default(false)
+  backoffice_work_description                                   String?                         @db.Text
+  first_service                                                 Boolean                         @default(true)
+  notification_remember_validation                              Boolean                         @default(true)
+  first_service_description                                     String?                         @db.Text
+  checkin_latitude                                              Float?
+  checkin_longitude                                             Float?
+  payment_token                                                 String?                         @db.VarChar(255)
+  temperature                                                   String?                         @db.VarChar(255)
+  weather                                                       String?                         @db.VarChar(255)
+  specialist_badge                                              String?                         @db.VarChar(255)
+  payment_id                                                    String?                         @db.VarChar(255)
+  status                                                        occurrences_status?
+  contract_id                                                   Int?
+  invoice_id                                                    Int?
+  price_id                                                      Int?
+  coupon_id                                                     Int?
+  address_id                                                    Int?
+  corporate_id                                                  Int?
+  client_user_id                                                Int?
+  service_id                                                    Int?
+  specialist_user_id                                            Int?
+  specialist_enterprise_id                                      Int?
+  credit_card_id                                                Int?
+  responsible_user_id                                           Int?
+  active                                                        Boolean                         @default(true)
+  created                                                       DateTime                        @default(now()) @db.Timestamp(0)
+  modified                                                      DateTime                        @default(now()) @db.Timestamp(0)
+  cost_center_id                                                Int?
+  responsible_block                                             Boolean                         @default(false)
+  occurrence_id                                                 Int?
+  type                                                          occurrences_type                @default(FIELD)
+  public_id                                                     String?                         @db.VarChar(255)
+  occurrence_link_id                                            Int?
+  integration                                                   Int?                            @default(0)
+  reason                                                        occurrences_reason?
+  reason_explanation                                            String?                         @db.Text
+  addresses                                                     addresses?                      @relation(fields: [address_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_occurrences_addresses")
+  checklists                                                    checklists?                     @relation(fields: [checklist_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_occurrences_checklists")
+  users_occurrences_client_user_idTousers                       users?                          @relation("occurrences_client_user_idTousers", fields: [client_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_occurrences_users1")
+  enterprises_enterprisesTooccurrences_corporate_id             enterprises?                    @relation("enterprisesTooccurrences_corporate_id", fields: [corporate_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_occurrences_enterprises1")
+  coupons                                                       coupons?                        @relation(fields: [coupon_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_occurrences_coupons1")
+  occurrence_links                                              occurrence_links?               @relation(fields: [occurrence_link_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_occurrence_link")
+  prices                                                        prices?                         @relation(fields: [price_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_occurrences_prices1")
+  services                                                      services?                       @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_occurrences_services1")
+  enterprises_enterprisesTooccurrences_specialist_enterprise_id enterprises?                    @relation("enterprisesTooccurrences_specialist_enterprise_id", fields: [specialist_enterprise_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_occurrences_enterprises2")
+  users_occurrences_specialist_user_idTousers                   users?                          @relation("occurrences_specialist_user_idTousers", fields: [specialist_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_occurrences_users2")
+  aditional_values                                              aditional_values[]
+  advance_payments                                              advance_payments[]
+  comments                                                      comments[]
+  extracts                                                      extracts[]
+  historics                                                     historics[]
+  medias                                                        medias[]
+  occurrences_keywords                                          occurrences_keywords[]
+  occurrences_services                                          occurrences_services[]
+  occurrences_tags                                              occurrences_tags[]
+  occurrences_technicians                                       occurrences_technicians[]
+  orders                                                        orders[]
+  points                                                        points[]
+  ratings                                                       ratings[]
+  recommendations                                               recommendations[]
+  refused_occurrences                                           refused_occurrences[]
+  shared                                                        shared[]
+  users_occurrences                                             users_occurrences[]
+
+  @@index([checklist_id], map: "FK_occurrences_checklists")
+  @@index([occurrence_link_id], map: "fk_occurrence_links_idx")
+  @@index([address_id], map: "fk_occurrences_addresses_idx")
+  @@index([contract_id], map: "fk_occurrences_contracts1_idx")
+  @@index([coupon_id], map: "fk_occurrences_coupons1_idx")
+  @@index([corporate_id], map: "fk_occurrences_enterprises1_idx")
+  @@index([specialist_enterprise_id], map: "fk_occurrences_enterprises2_idx")
+  @@index([invoice_id], map: "fk_occurrences_invoices1_idx")
+  @@index([price_id], map: "fk_occurrences_prices1_idx")
+  @@index([service_id], map: "fk_occurrences_services1_idx")
+  @@index([client_user_id], map: "fk_occurrences_users1_idx")
+  @@index([specialist_user_id], map: "fk_occurrences_users2_idx")
+}
+
+model occurrences_checklists {
+  id                 Int       @id @default(autoincrement())
+  occurrence_id      Int?
+  checklist_id       Int?
+  answered           Boolean?
+  created            DateTime  @default(now()) @db.Timestamp(0)
+  modified           DateTime  @default(now()) @db.Timestamp(0)
+  file               String?   @db.Text
+  file_date_generate DateTime? @db.Timestamp(0)
+  answered_at        DateTime? @db.DateTime(0)
+}
+
+model occurrences_checklists_answers {
+  id            Int      @id @default(autoincrement())
+  occurrence_id Int?
+  question_id   Int?
+  type          String?  @db.VarChar(50)
+  answer        String?  @db.Text
+  column_answer String?  @db.Text
+  created       DateTime @default(now()) @db.Timestamp(0)
+  modified      DateTime @default(now()) @db.Timestamp(0)
+  is_deleted    Boolean? @default(false)
+  user_id       Int?
+  version       Int?     @default(1)
+}
+
+model occurrences_keywords {
+  id            BigInt      @id @default(autoincrement()) @db.UnsignedBigInt
+  occurrence_id Int
+  keyword_id    Int
+  created       DateTime?   @db.Timestamp(0)
+  modified      DateTime?   @db.Timestamp(0)
+  users         users       @relation(fields: [keyword_id], references: [id], onDelete: Cascade, map: "occurrences_keywords_keyword_id_foreign")
+  occurrences   occurrences @relation(fields: [occurrence_id], references: [id], onDelete: Cascade, map: "occurrences_keywords_occurrence_id_foreign")
+
+  @@index([keyword_id], map: "occurrences_keywords_keyword_id_foreign")
+  @@index([occurrence_id], map: "occurrences_keywords_occurrence_id_foreign")
+}
+
+model occurrences_services {
+  id                                    BigInt                       @id @default(autoincrement()) @db.UnsignedBigInt
+  occurrence_id                         Int
+  service_id                            Int
+  created                               DateTime?                    @db.DateTime(0)
+  modified                              DateTime?                    @db.DateTime(0)
+  tools                                 String?                      @db.LongText
+  description                           String?                      @db.LongText
+  devices                               Int?                         @default(0)
+  external_os_id                        String?                      @db.VarChar(100)
+  device_id                             Int?                         @db.UnsignedInt
+  is_resolved                           Int                          @default(0)
+  logistic_name                         String?                      @db.Text
+  status                                occurrences_services_status?
+  solution_description                  String?                      @db.Text
+  integration_id                        String?                      @db.Text
+  is_approved                           Int                          @default(0)
+  approved_at                           DateTime?                    @db.Timestamp(0)
+  contact_attempts                      Int                          @default(0)
+  is_solved                             Boolean                      @default(false)
+  type_request                          String?                      @db.Text
+  type_solution                         String?                      @db.Text
+  code_solution                         String?                      @db.Text
+  devices_devicesTooccurrences_services devices?                     @relation(fields: [device_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_devices")
+  occurrences                           occurrences                  @relation(fields: [occurrence_id], references: [id], onDelete: Cascade, map: "fk_occurrence_occurrences_services")
+  services                              services                     @relation(fields: [service_id], references: [id], onDelete: Cascade, map: "fk_service_occurrences_services")
+  medias                                medias[]
+
+  @@index([device_id], map: "fk_devices_idx")
+  @@index([occurrence_id], map: "fk_occurrence_occurrences_services")
+  @@index([service_id], map: "fk_service_occurrences_services")
+}
+
+model occurrences_tags {
+  id            Int         @id @default(autoincrement())
+  tag_id        Int         @default(0)
+  occurrence_id Int         @default(0)
+  created       DateTime    @default(now()) @db.DateTime(0)
+  modified      DateTime    @default(now()) @db.DateTime(0)
+  occurrences   occurrences @relation(fields: [occurrence_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_occurrences_tags_occurrences")
+  tags          tags        @relation(fields: [tag_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_occurrences_tags_tags")
+
+  @@index([occurrence_id], map: "occurrence_id")
+  @@index([tag_id], map: "tag_id")
+}
+
+model occurrences_technicians {
+  id            Int          @id @default(autoincrement())
+  technician_id Int?
+  occurrence_id Int?
+  created       DateTime     @default(now()) @db.DateTime(0)
+  modified      DateTime     @default(now()) @db.DateTime(0)
+  occurrences   occurrences? @relation(fields: [occurrence_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_occurrences_technicians_occurrences")
+  users         users?       @relation(fields: [technician_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_occurrences_technicians_users")
+
+  @@index([occurrence_id], map: "FK_occurrences_technicians_occurrences")
+  @@index([technician_id], map: "FK_occurrences_technicians_users")
+}
+
+model operationists {
+  id             Int      @id @default(autoincrement())
+  user_id        Int
+  date_time_init DateTime @db.DateTime(0)
+  date_time_end  DateTime @db.DateTime(0)
+  created        DateTime @default(now()) @db.DateTime(0)
+  modified       DateTime @default(now()) @db.DateTime(0)
+  users          users    @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "FK_operationists_users")
+
+  @@index([user_id], map: "user_id")
+}
+
+model orders {
+  id                  Int            @id @default(autoincrement())
+  occurrence_id       Int?
+  name                String?        @db.VarChar(100)
+  quantity            Int?
+  payment_billed      Boolean?       @default(false)
+  real_value          Float?
+  client_value        Float?
+  status              orders_status?
+  created             DateTime?      @db.DateTime(0)
+  modified            DateTime?      @db.DateTime(0)
+  description         String?        @db.Text
+  payment_need_billed Boolean?       @default(true)
+  occurrences         occurrences?   @relation(fields: [occurrence_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_orders_occurrences")
+  medias              medias[]
+
+  @@index([occurrence_id], map: "FK_orders_occurrences")
+}
+
+model payment_methods {
+  id       Int       @id @default(autoincrement())
+  name     String    @db.VarChar(45)
+  active   Boolean   @default(true)
+  created  DateTime? @db.Timestamp(0)
+  modified DateTime? @db.Timestamp(0)
+  prices   prices[]
+}
+
+model permissions {
+  id                Int                 @id @default(autoincrement())
+  name              String              @db.VarChar(255)
+  group             String              @db.VarChar(255)
+  created_at        DateTime?           @db.Timestamp(0)
+  updated_at        DateTime?           @db.Timestamp(0)
+  roles_permissions roles_permissions[]
+}
+
+model permissions_manager_phinxlog {
+  version        BigInt    @id
+  migration_name String?   @db.VarChar(100)
+  start_time     DateTime? @db.Timestamp(0)
+  end_time       DateTime? @db.Timestamp(0)
+  breakpoint     Boolean   @default(false)
+}
+
+model personal_access_tokens {
+  id             BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  tokenable_type String    @db.VarChar(255)
+  tokenable_id   BigInt    @db.UnsignedBigInt
+  name           String    @db.VarChar(255)
+  token          String    @unique(map: "personal_access_tokens_token_unique") @db.VarChar(64)
+  abilities      String?   @db.Text
+  last_used_at   DateTime? @db.Timestamp(0)
+  created_at     DateTime? @db.Timestamp(0)
+  updated_at     DateTime? @db.Timestamp(0)
+
+  @@index([tokenable_type, tokenable_id], map: "personal_access_tokens_tokenable_type_tokenable_id_index")
+}
+
+model phinxlog {
+  version        BigInt   @id
+  migration_name String?  @db.VarChar(100)
+  start_time     DateTime @default(now()) @db.Timestamp(0)
+  end_time       DateTime @default(now()) @db.Timestamp(0)
+  breakpoint     Boolean  @default(false)
+}
+
+model phones {
+  id                  Int                @id @default(autoincrement())
+  number              String?            @db.VarChar(45)
+  DDI                 String             @default("+55") @db.VarChar(5)
+  subscriber          Boolean            @default(true)
+  service_provider_id Int?
+  individual_id       Int?
+  enterprise_id       Int?
+  active              Boolean            @default(true)
+  created             DateTime?          @db.Timestamp(0)
+  modified            DateTime?          @db.Timestamp(0)
+  enterprises         enterprises?       @relation(fields: [enterprise_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_phones_enterprises1")
+  individuals         individuals?       @relation(fields: [individual_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_phones_individuals1")
+  service_providers   service_providers? @relation(fields: [service_provider_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_phones_service_providers1")
+
+  @@index([enterprise_id], map: "fk_phones_enterprises1_idx")
+  @@index([individual_id], map: "fk_phones_individuals1_idx")
+  @@index([service_provider_id], map: "fk_phones_service_providers1_idx")
+}
+
+model plans {
+  id              Int       @id @default(autoincrement())
+  name            String    @db.VarChar(45)
+  description     String?   @db.Text
+  points_quantity Int
+  price           Float
+  active          Boolean   @default(true)
+  created         DateTime? @db.Timestamp(0)
+  modified        DateTime? @db.Timestamp(0)
+}
+
+model points {
+  id            Int         @id @default(autoincrement())
+  user_id       Int
+  occurrence_id Int
+  points        Int
+  created       DateTime    @db.DateTime(0)
+  modified      DateTime    @db.DateTime(0)
+  occurrences   occurrences @relation(fields: [occurrence_id], references: [id], onDelete: Cascade, map: "FK__occurrences_points")
+  users         users       @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "FK__users_points")
+
+  @@index([occurrence_id], map: "FK__occurrences_points")
+  @@index([user_id], map: "FK__users_points")
+}
+
+model prices {
+  id                                   Int                                    @id @default(autoincrement())
+  region_id                            Int?
+  service_contract_id                  Int?
+  payment_method_id                    Int?
+  occurrence_multiplier_income         Int?
+  occurrence_multiplier_costs          Int?
+  specialist_total_price               Float?
+  unique_point_value                   Float?
+  occurrence_base_price                Float?
+  occurrence_hour_income               Float?                                 @default(0)
+  occurrence_hour_costs                Float?                                 @default(0)
+  occurrence_base_price_quantity       Float                                  @default(0)
+  occurrence_additional_costs          Float?                                 @default(0)
+  occurrence_additional_income         Float?                                 @default(0)
+  occurrence_tools_costs               Float?                                 @default(0)
+  occurrence_tools_income              Float?                                 @default(0)
+  occurrence_displacement_total_ups    Int?
+  occurrence_displacement_type_payment String?                                @db.VarChar(50)
+  occurrence_displacement_costs        Float?                                 @default(0)
+  occurrence_distance                  Float?                                 @default(0)
+  occurrence_displacement_income       Float?                                 @default(0)
+  occurrence_lodging_income            Float?                                 @default(0)
+  occurrence_lodging_costs             Float?                                 @default(0)
+  occurrence_feeding_income            Float?                                 @default(0)
+  occurrence_feeding_costs             Float?                                 @default(0)
+  occurrence_discount_price            Float?                                 @default(0)
+  occurrence_discount_type             prices_occurrence_discount_type?
+  occurrence_displacement_status       prices_occurrence_displacement_status? @default(WITHOUT_DISPLACEMENT)
+  occurrence_total_price               Float?                                 @default(0)
+  occurrence_base_hours                Int?                                   @default(0)
+  occurrence_base_hours_quantity       Int                                    @default(0)
+  occurrence_extra_hours               Int?                                   @default(0)
+  occurrence_extra_hours_quantity      Int?                                   @default(0)
+  occurrence_total_hours               Int?                                   @default(0)
+  occurrence_extra_price               Float?                                 @default(0)
+  occurrence_extra_price_quantity      Float                                  @default(0)
+  specialist_base_price                Float?                                 @default(0)
+  specialist_extra_price               Float?                                 @default(0)
+  specialist_extra_price_quantity      Float?                                 @default(0)
+  currency                             String?                                @default("POINTS") @db.VarChar(6)
+  occurrence_displacement_city         String?                                @db.Text
+  active                               Boolean                                @default(true)
+  created                              DateTime?                              @db.Timestamp(0)
+  modified                             DateTime?                              @db.Timestamp(0)
+  displacement_billed                  Boolean                                @default(false)
+  displacement_need_billed             Boolean                                @default(true)
+  payment_methods                      payment_methods?                       @relation(fields: [payment_method_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_prices_payment_methods1")
+  regions                              regions?                               @relation(fields: [region_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_prices_regions1")
+  services_contracts                   services_contracts?                    @relation(fields: [service_contract_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_prices_services_contracts1")
+  occurrences                          occurrences[]
+
+  @@index([payment_method_id], map: "fk_prices_payment_methods1_idx")
+  @@index([region_id], map: "fk_prices_regions1_idx")
+  @@index([service_contract_id], map: "fk_prices_services_contracts1_idx")
+}
+
+model priority_technicians {
+  id            Int                       @id @default(autoincrement())
+  enterprise_id Int?
+  user_id       Int?
+  created       DateTime?                 @db.DateTime(0)
+  modified      DateTime?                 @db.DateTime(0)
+  type          priority_technicians_type @default(NORMAL)
+  enterprises   enterprises?              @relation(fields: [enterprise_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_priority_technicians_enterprises")
+  users         users?                    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_priority_technicians_users")
+
+  @@index([enterprise_id], map: "FK_priority_technicians_enterprises")
+  @@index([user_id], map: "FK_priority_technicians_users")
+}
+
+model professional_experiences {
+  id              Int          @id @default(autoincrement())
+  individual_id   Int?
+  enterprise_name String       @db.VarChar(50)
+  function        String       @db.VarChar(50)
+  activity        String?      @db.Text
+  initial_date    DateTime     @db.Date
+  final_date      DateTime?    @db.Date
+  created         DateTime     @default(now()) @db.Timestamp(0)
+  modified        DateTime     @default(now()) @db.Timestamp(0)
+  individuals     individuals? @relation(fields: [individual_id], references: [id], onDelete: Cascade, map: "FK_professional_experiences_individuals")
+
+  @@index([individual_id], map: "individual_id")
+}
+
+model proposed_occurrences {
+  id                      Int                        @id @default(autoincrement())
+  type                    proposed_occurrences_type?
+  city_id                 Int
+  user_id                 Int
+  active                  Boolean                    @default(true)
+  created                 DateTime?                  @db.Timestamp(0)
+  modified                DateTime?                  @db.Timestamp(0)
+  enterprise_id           Int?
+  price_lodging           Float?
+  price_displacement      Float?
+  price_feeding           Float?
+  price_hour              Float?
+  price_total_in_currency Float?
+  price_total_in_up       Int?
+  occurrence_id           Int?
+  cities                  cities                     @relation(fields: [city_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_proposed_occurrence_cities1")
+  users                   users                      @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_proposed_occurrence_users1")
+
+  @@index([city_id], map: "fk_proposed_occurrence_cities1_idx")
+  @@index([user_id], map: "fk_proposed_occurrence_users1_idx")
+}
+
+model questions {
+  id              Int               @id @default(autoincrement())
+  question        String            @db.Text
+  active          Boolean           @default(true)
+  created         DateTime?         @db.Timestamp(0)
+  modified        DateTime?         @db.Timestamp(0)
+  skill_id        Int?
+  course_id       Int?
+  courses         courses?          @relation(fields: [course_id], references: [id], onDelete: Cascade, map: "FK_questions_courses")
+  skills          skills?           @relation(fields: [skill_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_questions_skills1")
+  answers         answers[]
+  tests_questions tests_questions[]
+
+  @@index([course_id], map: "course_id")
+  @@index([skill_id], map: "fk_questions_skills1_idx")
+}
+
+model ratings {
+  id                                     Int               @id @default(autoincrement())
+  points                                 Int
+  type                                   ratings_type      @default(APP)
+  platform                               String?           @db.Text
+  version                                String?           @db.VarChar(45)
+  user_external_email                    String?           @db.VarChar(200)
+  description                            String?           @db.Text
+  occurrence_id                          Int?
+  sender_id                              Int?
+  recipient_id                           Int?
+  active                                 Boolean           @default(true)
+  created                                DateTime?         @db.Timestamp(0)
+  modified                               DateTime?         @db.Timestamp(0)
+  operation_date                         DateTime?         @db.Date
+  operation_validated                    Boolean?          @default(false)
+  operation_comment                      String?           @db.Text
+  operation_user_id                      Int?
+  operation_approved                     Boolean?          @default(false)
+  occurrences                            occurrences?      @relation(fields: [occurrence_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_ratings_occurrences1")
+  users_ratings_operation_user_idTousers users?            @relation("ratings_operation_user_idTousers", fields: [operation_user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_ratings_users")
+  users_ratings_recipient_idTousers      users?            @relation("ratings_recipient_idTousers", fields: [recipient_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_ratings_users2")
+  users_ratings_sender_idTousers         users?            @relation("ratings_sender_idTousers", fields: [sender_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_ratings_users1")
+  ratings_reviews                        ratings_reviews[]
+
+  @@index([occurrence_id], map: "fk_ratings_occurrences1_idx")
+  @@index([sender_id], map: "fk_ratings_users1_idx")
+  @@index([recipient_id], map: "fk_ratings_users2_idx")
+  @@index([operation_user_id], map: "operation_user_id")
+}
+
+model ratings_reviews {
+  id        Int       @id @default(autoincrement())
+  rating_id Int
+  review_id Int
+  active    Boolean   @default(true)
+  created   DateTime? @db.Timestamp(0)
+  modified  DateTime? @db.Timestamp(0)
+  ratings   ratings   @relation(fields: [rating_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_ratings_reviews_ratings1")
+  reviews   reviews   @relation(fields: [review_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_ratings_reviews_reviews1")
+
+  @@index([rating_id], map: "fk_ratings_reviews_ratings1_idx")
+  @@index([review_id], map: "fk_ratings_reviews_reviews1_idx")
+}
+
+model recommendations {
+  id                                BigInt      @id @default(autoincrement()) @db.UnsignedBigInt
+  occurrence_id                     Int
+  specialist_user_id                Int
+  similarity                        Float
+  similar_specialist_occurrences    Int
+  distance_specialist_to_occurrence Float?
+  created                           DateTime?   @db.Timestamp(0)
+  modified                          DateTime?   @db.Timestamp(0)
+  occurrences                       occurrences @relation(fields: [occurrence_id], references: [id], onDelete: Cascade, map: "recommendations_occurrence_id_foreign")
+  users                             users       @relation(fields: [specialist_user_id], references: [id], onDelete: Cascade, map: "recommendations_specialist_user_id_foreign")
+
+  @@index([occurrence_id], map: "recommendations_occurrence_id_foreign")
+  @@index([specialist_user_id], map: "recommendations_specialist_user_id_foreign")
+}
+
+model refused_occurrences {
+  id            Int          @id @default(autoincrement())
+  user_id       Int?
+  occurrence_id Int?
+  reason        String?      @db.Text
+  created       DateTime?    @db.DateTime(0)
+  modified      DateTime     @default(now()) @db.Timestamp(0)
+  occurrences   occurrences? @relation(fields: [occurrence_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_refused_occurrences_occurrences")
+  users         users?       @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_refused_occurrences_users")
+
+  @@index([occurrence_id], map: "occurrence_id")
+  @@index([user_id], map: "user_id")
+}
+
+model regions {
+  id                     Int       @id @default(autoincrement())
+  name                   String?   @db.VarChar(45)
+  opening_hour           DateTime? @db.Time(0)
+  ending_hour            DateTime? @db.Time(0)
+  occurrence_base_price  Float
+  occurrence_base_hours  Int
+  occurrence_extra_price Float
+  occurrence_extra_hours Int
+  specialist_base_price  Float?
+  specialist_extra_price Float?
+  currency               String    @db.VarChar(4)
+  active                 Boolean   @default(true)
+  created                DateTime? @db.Timestamp(0)
+  modified               DateTime? @db.Timestamp(0)
+  cities                 cities[]
+  prices                 prices[]
+}
+
+model reports {
+  id                       BigInt            @id @default(autoincrement()) @db.UnsignedBigInt
+  company                  String            @db.VarChar(255)
+  up_value                 Float
+  project                  String            @db.VarChar(255)
+  csv_url_file             String            @db.VarChar(255)
+  capillarity_file         String?           @db.VarChar(255)
+  initialized_at           DateTime?         @db.DateTime(0)
+  processed_at             DateTime?         @db.DateTime(0)
+  capillarity_generated_at DateTime?         @db.DateTime(0)
+  user_id                  Int
+  created                  DateTime          @db.DateTime(0)
+  modified                 DateTime          @db.DateTime(0)
+  users                    users             @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_user_id_reports")
+  costs_templates          costs_templates[]
+
+  @@index([user_id], map: "reports_user_id_index")
+}
+
+model reviews {
+  id              Int                  @id @default(autoincrement())
+  description     String               @db.VarChar(100)
+  type            reviews_type
+  type_rating     reviews_type_rating?
+  active          Boolean              @default(true)
+  created         DateTime?            @db.Timestamp(0)
+  modified        DateTime?            @db.Timestamp(0)
+  ratings_reviews ratings_reviews[]
+}
+
+model roles {
+  id                Int                 @id @default(autoincrement())
+  name              String?             @db.VarChar(255)
+  alias             String?             @db.VarChar(255)
+  created           DateTime            @default(now()) @db.DateTime(0)
+  modified          DateTime            @default(now()) @db.DateTime(0)
+  enterprise_id     Int?
+  enterprises       enterprises?        @relation(fields: [enterprise_id], references: [id], onDelete: Cascade, map: "roles_enterprise_id_foreign")
+  roles_permissions roles_permissions[]
+  users             users[]
+  users_enterprises users_enterprises[]
+
+  @@unique([alias, name], map: "alias")
+  @@index([enterprise_id], map: "roles_enterprise_id_foreign")
+}
+
+model roles_modules {
+  id        Int      @id @default(autoincrement())
+  role_id   Int
+  module_id Int
+  create    String   @default("0") @map("_create") @db.VarChar(2)
+  read      String   @default("0") @map("_read") @db.VarChar(2)
+  update    String   @default("0") @map("_update") @db.VarChar(2)
+  delete    String   @default("0") @map("_delete") @db.VarChar(2)
+  created   DateTime @default(now()) @db.DateTime(0)
+  modified  DateTime @default(now()) @db.DateTime(0)
+
+  @@unique([role_id, module_id], map: "role_id")
+}
+
+model roles_permissions {
+  id            Int         @id @default(autoincrement())
+  role_id       Int
+  permission_id Int
+  created_at    DateTime?   @db.Timestamp(0)
+  updated_at    DateTime?   @db.Timestamp(0)
+  permissions   permissions @relation(fields: [permission_id], references: [id], onDelete: Cascade, map: "roles_permissions_permission_id_foreign")
+  roles         roles       @relation(fields: [role_id], references: [id], onDelete: Cascade, map: "roles_permissions_role_id_foreign")
+
+  @@index([permission_id], map: "roles_permissions_permission_id_foreign")
+  @@index([role_id], map: "roles_permissions_role_id_foreign")
+}
+
+model service_providers {
+  id       Int       @id @default(autoincrement())
+  name     String    @unique(map: "name_UNIQUE") @db.VarChar(45)
+  active   Boolean   @default(true)
+  created  DateTime? @db.Timestamp(0)
+  modified DateTime? @db.Timestamp(0)
+  phones   phones[]
+}
+
+model services {
+  id                   Int                    @id @default(autoincrement())
+  name                 String                 @db.VarChar(45)
+  photo                String?                @db.Text
+  available_B2B        Boolean                @default(true)
+  service_id           Int?
+  active               Boolean                @default(true)
+  created              DateTime?              @db.Timestamp(0)
+  modified             DateTime?              @db.Timestamp(0)
+  contracts_tools      contracts_tools[]
+  models               models[]
+  occurrences          occurrences[]
+  occurrences_services occurrences_services[]
+  services_contracts   services_contracts[]
+  services_skills      services_skills[]
+  services_tags        services_tags[]
+
+  @@index([service_id], map: "fk_services_services1_idx")
+}
+
+model services_contracts {
+  id                      Int       @id @default(autoincrement())
+  contract_id             Int
+  service_id              Int
+  occurrence_base_points  Int
+  occurrence_base_hours   Int
+  occurrence_extra_points Int
+  occurrence_extra_hours  Int
+  specialist_base_price   Float?
+  specialist_extra_price  Float?
+  active                  Boolean   @default(true)
+  created                 DateTime? @db.Timestamp(0)
+  modified                DateTime? @db.Timestamp(0)
+  contracts               contracts @relation(fields: [contract_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_services_contracts_contracts1")
+  services                services  @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_services_contracts_services1")
+  prices                  prices[]
+
+  @@index([contract_id], map: "fk_services_contracts_contracts1_idx")
+  @@index([service_id], map: "fk_services_contracts_services1_idx")
+}
+
+model services_skills {
+  id         Int       @id @default(autoincrement())
+  skill_id   Int
+  service_id Int
+  active     Boolean   @default(true)
+  created    DateTime? @db.Timestamp(0)
+  modified   DateTime? @db.Timestamp(0)
+  services   services  @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_services_skills_services1")
+  skills     skills    @relation(fields: [skill_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_services_skills_skills1")
+
+  @@index([service_id], map: "fk_services_skills_services1_idx")
+  @@index([skill_id], map: "fk_services_skills_skills1_idx")
+}
+
+model services_tags {
+  id         Int       @id @default(autoincrement())
+  tag_id     Int?
+  service_id Int?
+  created    DateTime? @db.DateTime(0)
+  modified   DateTime? @db.DateTime(0)
+  services   services? @relation(fields: [service_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_services_tags_services")
+  tags       tags?     @relation(fields: [tag_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "FK_services_tags_tags")
+
+  @@index([service_id], map: "service_id")
+  @@index([tag_id], map: "tag_id")
+}
+
+model shared {
+  id            Int          @id @default(autoincrement())
+  created       DateTime     @default(now()) @db.DateTime(0)
+  modified      DateTime     @db.DateTime(0)
+  email         String       @db.VarChar(200)
+  occurrence_id Int?
+  token         String?      @db.VarChar(50)
+  occurrences   occurrences? @relation(fields: [occurrence_id], references: [id], onUpdate: SetNull, map: "FK_shared_occurrences")
+
+  @@index([occurrence_id], map: "occurrence_id")
+}
+
+model skills {
+  id                 Int                  @id @default(autoincrement())
+  name               String               @db.VarChar(45)
+  parent_id          Int?
+  description        String?              @db.Text
+  active             Boolean              @default(true)
+  created            DateTime?            @db.Timestamp(0)
+  modified           DateTime?            @db.Timestamp(0)
+  skills             skills?              @relation("skillsToskills_parent_id", fields: [parent_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_skills_skills1")
+  individuals_skills individuals_skills[]
+  questions          questions[]
+  services_skills    services_skills[]
+  other_skills       skills[]             @relation("skillsToskills_parent_id")
+  tests              tests[]
+
+  @@index([parent_id], map: "fk_skills_skills1_idx")
+}
+
+model socialmedias {
+  id                Int                 @id @default(autoincrement())
+  name              String              @db.VarChar(45)
+  active            Boolean             @default(true)
+  created           DateTime?           @db.Timestamp(0)
+  modified          DateTime?           @db.Timestamp(0)
+  individuals_auths individuals_auths[]
+  links             links[]
+}
+
+model specialist_features {
+  id                      BigInt   @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id                 Int
+  rejected_accumulated    Int      @default(0)
+  occurrences_accumulated Int      @default(0)
+  date                    DateTime @db.DateTime(0)
+  created                 DateTime @db.DateTime(0)
+  modified                DateTime @db.DateTime(0)
+  users                   users    @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "user_id_specialist_feature")
+
+  @@index([user_id], map: "specialist_features_user_id_index")
+}
+
+/// The underlying table does not contain a valid unique identifier and can therefore currently not be handled by the Prisma Client.
+model sqlmapfile {
+  data String? @db.LongText
+
+  @@ignore
+}
+
+model states {
+  id         Int         @id @default(autoincrement())
+  name       String      @db.VarChar(45)
+  abbrv      String?     @db.VarChar(3)
+  country_id Int
+  created    DateTime?   @db.Timestamp(0)
+  modified   DateTime?   @db.Timestamp(0)
+  active     Boolean     @default(true)
+  countries  countries   @relation(fields: [country_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_states_countries1")
+  addresses  addresses[]
+  cities     cities[]
+  holidays   holidays[]
+
+  @@index([country_id], map: "fk_states_countries1_idx")
+}
+
+model stats {
+  id        Int       @id @default(autoincrement())
+  user_id   Int?
+  entity_id Int?
+  entity    String?   @db.VarChar(50)
+  platform  String?   @default("ADMIN") @db.VarChar(50)
+  tag       String?   @db.VarChar(200)
+  ip        String?   @db.VarChar(50)
+  url       String?   @db.VarChar(200)
+  created   DateTime? @db.DateTime(0)
+}
+
+model subsidiary_imports {
+  id             BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  company_name   String    @db.VarChar(255)
+  csv_url_file   String    @db.VarChar(255)
+  enterprise_id  Int
+  user_id        Int
+  initialized_at DateTime? @db.DateTime(0)
+  processed_at   DateTime? @db.DateTime(0)
+  json_report    String?   @db.Text
+  created        DateTime  @db.DateTime(0)
+  modified       DateTime  @db.DateTime(0)
+
+  @@index([enterprise_id], map: "subsidiary_imports_enterprise_id_index")
+  @@index([user_id], map: "subsidiary_imports_user_id_index")
+}
+
+model surveys {
+  id       Int       @id @default(autoincrement())
+  title    String    @db.VarChar(255)
+  link     String    @db.VarChar(255)
+  active   Boolean   @default(true)
+  created  DateTime? @db.Timestamp(0)
+  modified DateTime? @db.Timestamp(0)
+}
+
+model tags {
+  id               Int                @id @default(autoincrement())
+  name             String             @db.VarChar(250)
+  created          DateTime           @db.DateTime(0)
+  modified         DateTime           @db.DateTime(0)
+  active           Int                @default(1) @db.TinyInt
+  models_tags      models_tags[]      @ignore
+  occurrences_tags occurrences_tags[]
+  services_tags    services_tags[]
+}
+
+model tests {
+  id              Int               @id @default(autoincrement())
+  name            String?           @db.VarChar(45)
+  result          Int?
+  completed       Boolean           @default(false)
+  active          Boolean           @default(true)
+  created         DateTime?         @db.Timestamp(0)
+  modified        DateTime?         @db.Timestamp(0)
+  user_id         Int
+  skill_id        Int
+  skills          skills            @relation(fields: [skill_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_tests_skills1")
+  users           users             @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_tests_users1")
+  tests_questions tests_questions[]
+
+  @@index([skill_id], map: "fk_tests_skills1_idx")
+  @@index([user_id], map: "fk_tests_users1_idx")
+}
+
+model tests_questions {
+  id          Int       @id @default(autoincrement())
+  test_id     Int
+  answer_id   Int?
+  question_id Int
+  active      Boolean?  @default(true)
+  created     DateTime? @db.Timestamp(0)
+  modified    DateTime? @db.Timestamp(0)
+  answers     answers?  @relation(fields: [answer_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_tests_questions_answers1")
+  questions   questions @relation(fields: [question_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_table1_questions1")
+  tests       tests     @relation(fields: [test_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_table1_tests1")
+
+  @@index([question_id], map: "fk_table1_questions1_idx")
+  @@index([test_id], map: "fk_table1_tests1_idx")
+  @@index([answer_id], map: "fk_tests_questions_answers1_idx")
+}
+
+model transportations {
+  id                    Int       @id @default(autoincrement())
+  user_id               Int
+  car                   Boolean?  @default(false)
+  motorbike             Boolean?  @default(false)
+  public_transportation Boolean?  @default(false)
+  active                Boolean   @default(true)
+  created               DateTime? @db.Timestamp(0)
+  modified              DateTime? @db.Timestamp(0)
+  users                 users     @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_transportation_users1")
+
+  @@index([user_id], map: "fk_transportation_users1_idx")
+}
+
+model tutorials {
+  id       Int       @id @default(autoincrement())
+  title    String    @db.VarChar(255)
+  link     String    @db.VarChar(255)
+  active   Boolean   @default(true)
+  created  DateTime? @db.Timestamp(0)
+  modified DateTime? @db.Timestamp(0)
+}
+
+model users {
+  id                                                             Int                       @id @default(autoincrement())
+  username                                                       String?                   @unique(map: "username_UNIQUE") @db.VarChar(150)
+  telegram_id                                                    String?                   @db.VarChar(45)
+  telegram_notification_id                                       String?                   @db.VarChar(100)
+  password                                                       String                    @db.VarChar(255)
+  phone                                                          String?                   @db.VarChar(15)
+  first_name                                                     String                    @db.VarChar(75)
+  last_name                                                      String?                   @db.VarChar(75)
+  new_photo                                                      Boolean                   @default(false)
+  specialist_reference                                           Boolean                   @default(false)
+  reset_password_token                                           String?                   @db.VarChar(255)
+  reset_password_token_created_at                                DateTime?                 @db.Timestamp(0)
+  hash_password                                                  String?                   @db.VarChar(255)
+  user_reference_id                                              Int?
+  accept_demands                                                 Boolean?                  @default(false)
+  moderator                                                      Boolean?                  @default(false)
+  role_id                                                        Int?
+  notification_id                                                Int?
+  enterprise_id                                                  Int?
+  access_client                                                  Boolean?                  @default(false)
+  access_admin                                                   Boolean?                  @default(false)
+  access_specialist                                              Boolean?                  @default(false)
+  must_change_password                                           Boolean?                  @default(false)
+  hash_invite                                                    String?                   @db.Text
+  lat                                                            String?                   @db.VarChar(255)
+  lng                                                            String?                   @db.VarChar(255)
+  facebook_pass                                                  String?                   @db.VarChar(255)
+  facebook_id                                                    String?                   @db.VarChar(255)
+  uid_user                                                       String?                   @db.VarChar(100)
+  uid_geolocation                                                String?                   @db.VarChar(100)
+  timezone                                                       String                    @default("America/Sao_Paulo") @db.VarChar(50)
+  available                                                      Boolean                   @default(true)
+  rating                                                         Float?                    @default(5)
+  enterprise_service_id                                          Int?
+  full_record                                                    Boolean                   @default(false)
+  changelog_read                                                 DateTime?                 @db.DateTime(0)
+  black_list                                                     Boolean                   @default(false)
+  black_list_date                                                DateTime?                 @db.DateTime(0)
+  active                                                         Boolean                   @default(true)
+  active_date                                                    DateTime?                 @db.DateTime(0)
+  active_expired                                                 DateTime?                 @db.DateTime(0)
+  created                                                        DateTime?                 @default(now()) @db.Timestamp(0)
+  last_access                                                    DateTime?                 @db.Timestamp(0)
+  change_password_date                                           DateTime?                 @default(now()) @db.Timestamp(0)
+  modified                                                       DateTime?                 @db.Timestamp(0)
+  step_register                                                  Int?                      @default(1)
+  consecutive_days                                               Int?                      @default(0)
+  max_consecutive_days                                           Int?                      @default(0)
+  points                                                         Int?                      @default(1000)
+  generate_note                                                  Boolean?                  @default(false)
+  allow_check_face_photo                                         Boolean?                  @default(false)
+  is_purchasing_approver                                         Boolean?                  @default(false)
+  badge                                                          users_badge?              @default(DIAMOND)
+  terms_accepted                                                 Boolean?                  @default(false)
+  version_app_tech                                               String?                   @db.VarChar(50)
+  status                                                         users_status?             @default(ANALYSIS)
+  register_percent                                               Float?                    @default(0)
+  register_missing                                               String?                   @db.VarChar(300)
+  specialist_type                                                String?                   @default("FINDUP") @db.VarChar(300)
+  is_checked                                                     Boolean?                  @default(false)
+  is_checked_at                                                  DateTime?                 @db.Timestamp(0)
+  enterprises_enterprisesTousers_enterprise_id                   enterprises?              @relation("enterprisesTousers_enterprise_id", fields: [enterprise_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_users_enterprises1")
+  notifications                                                  notifications?            @relation(fields: [notification_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_users_notifications1")
+  roles                                                          roles?                    @relation(fields: [role_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_users_roles1")
+  users                                                          users?                    @relation("usersTousers_user_reference_id", fields: [user_reference_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "fk_users_users1")
+  achievements                                                   achievements[]
+  aditional_values_aditional_values_user_created_idTousers       aditional_values[]        @relation("aditional_values_user_created_idTousers")
+  aditional_values_aditional_values_user_idTousers               aditional_values[]        @relation("aditional_values_user_idTousers")
+  advance_payments_advance_payments_user_approved_idTousers      advance_payments[]        @relation("advance_payments_user_approved_idTousers")
+  advance_payments_advance_payments_user_created_idTousers       advance_payments[]        @relation("advance_payments_user_created_idTousers")
+  advance_payments_advance_payments_user_payed_idTousers         advance_payments[]        @relation("advance_payments_user_payed_idTousers")
+  availabilities                                                 availabilities[]
+  bank_accounts                                                  bank_accounts[]
+  blacklist_technicians                                          blacklist_technicians[]
+  charges                                                        charges[]
+  chats_chats_recipient_idTousers                                chats[]                   @relation("chats_recipient_idTousers")
+  chats_chats_sender_idTousers                                   chats[]                   @relation("chats_sender_idTousers")
+  collects                                                       collects[]
+  comments                                                       comments[]
+  configurations                                                 configurations[]
+  cost_centers_users                                             cost_centers_users[]
+  coupons_coupons_beneficiary_user_idTousers                     coupons[]                 @relation("coupons_beneficiary_user_idTousers")
+  coupons_coupons_created_user_idTousers                         coupons[]                 @relation("coupons_created_user_idTousers")
+  courses_users                                                  courses_users[]
+  created_links_created_links_deleted_byTousers                  created_links[]           @relation("created_links_deleted_byTousers")
+  created_links_created_links_user_idTousers                     created_links[]           @relation("created_links_user_idTousers")
+  credit_cards                                                   credit_cards[]
+  credits                                                        credits[]
+  dashboards                                                     dashboards[]
+  disabled_reasons                                               disabled_reasons[]
+  enterprise_features                                            enterprise_features[]
+  enterprises_enterprises_created_user_idTousers                 enterprises[]             @relation("enterprises_created_user_idTousers")
+  enterprises_enterprises_cs_user_idTousers                      enterprises[]             @relation("enterprises_cs_user_idTousers")
+  enterprises_enterprises_validated_byTousers                    enterprises[]             @relation("enterprises_validated_byTousers")
+  favorite_specialists_favorite_specialists_specialist_idTousers favorite_specialists[]    @relation("favorite_specialists_specialist_idTousers")
+  favorite_specialists_favorite_specialists_user_idTousers       favorite_specialists[]    @relation("favorite_specialists_user_idTousers")
+  historics                                                      historics[]
+  invoices_invoices_user_created_idTousers                       invoices[]                @relation("invoices_user_created_idTousers")
+  invoices_invoices_user_idTousers                               invoices[]                @relation("invoices_user_idTousers")
+  medias                                                         medias[]
+  messages                                                       messages[]
+  models_models_created_user_idTousers                           models[]                  @relation("models_created_user_idTousers")
+  models_models_user_idTousers                                   models[]                  @relation("models_user_idTousers")
+  occurrence_links_occurrence_links_created_byTousers            occurrence_links[]        @relation("occurrence_links_created_byTousers")
+  occurrence_links_occurrence_links_deleted_byTousers            occurrence_links[]        @relation("occurrence_links_deleted_byTousers")
+  occurrences_occurrences_client_user_idTousers                  occurrences[]             @relation("occurrences_client_user_idTousers")
+  occurrences_occurrences_specialist_user_idTousers              occurrences[]             @relation("occurrences_specialist_user_idTousers")
+  occurrences_keywords                                           occurrences_keywords[]
+  occurrences_technicians                                        occurrences_technicians[]
+  operationists                                                  operationists[]
+  points_pointsTousers                                           points[]
+  priority_technicians                                           priority_technicians[]
+  proposed_occurrences                                           proposed_occurrences[]
+  ratings_ratings_operation_user_idTousers                       ratings[]                 @relation("ratings_operation_user_idTousers")
+  ratings_ratings_recipient_idTousers                            ratings[]                 @relation("ratings_recipient_idTousers")
+  ratings_ratings_sender_idTousers                               ratings[]                 @relation("ratings_sender_idTousers")
+  recommendations                                                recommendations[]
+  refused_occurrences                                            refused_occurrences[]
+  reports                                                        reports[]
+  specialist_features                                            specialist_features[]
+  tests                                                          tests[]
+  transportations                                                transportations[]
+  other_users                                                    users[]                   @relation("usersTousers_user_reference_id")
+  users_dashboards                                               users_dashboards[]
+  users_validations                                              users_validations[]
+  work_points                                                    work_points[]
+
+  @@index([enterprise_id], map: "fk_users_enterprises1_idx")
+  @@index([notification_id], map: "fk_users_notifications1_idx")
+  @@index([role_id], map: "fk_users_roles1_idx")
+  @@index([user_reference_id], map: "fk_users_users1_idx")
+}
+
+model users_addresses {
+  id         Int       @id @default(autoincrement())
+  user_id    Int?
+  address_id Int?
+  created    DateTime? @default(now()) @db.DateTime(0)
+  modified   DateTime? @db.DateTime(0)
+  name       String?   @db.Text
+  email      String?   @db.Text
+  phone      String?   @db.Text
+}
+
+model users_dashboards {
+  id           BigInt     @id @default(autoincrement()) @db.UnsignedBigInt
+  user_id      Int
+  dashboard_id BigInt     @db.UnsignedBigInt
+  created_at   DateTime?  @db.Timestamp(0)
+  updated_at   DateTime?  @db.Timestamp(0)
+  dashboards   dashboards @relation(fields: [dashboard_id], references: [id], onDelete: Cascade, map: "fk_dashboard_users_dashboard")
+  users        users      @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "fk_user_users_dashboard")
+
+  @@index([dashboard_id], map: "fk_dashboard_users_dashboard")
+  @@index([user_id], map: "fk_user_users_dashboard")
+}
+
+model users_enterprises {
+  id            Int       @id @default(autoincrement())
+  user_id       Int?
+  enterprise_id Int?
+  created       DateTime? @db.DateTime(0)
+  modified      DateTime? @db.DateTime(0)
+  is_moderator  Boolean?  @default(false)
+  is_active     Boolean?  @default(true)
+  role_id       Int?
+  roles         roles?    @relation(fields: [role_id], references: [id], onDelete: Cascade, map: "users_enterprises_role_id_foreign")
+
+  @@index([role_id], map: "users_enterprises_role_id_foreign")
+}
+
+model users_occurrences {
+  id            Int                             @id @default(autoincrement())
+  occurrence_id Int?
+  name          String                          @db.VarChar(150)
+  type          users_occurrences_type          @default(CONTACT)
+  email         String?                         @db.VarChar(150)
+  phone         String                          @db.VarChar(15)
+  description   String?                         @db.Text
+  signature     String?                         @db.Text
+  note          Int?                            @db.TinyInt
+  role          users_occurrences_role?         @default(LOCAL_CONTACT)
+  required_for  users_occurrences_required_for? @default(BOTH)
+  created       DateTime?                       @db.DateTime(0)
+  modified      DateTime?                       @db.DateTime(0)
+  occurrences   occurrences?                    @relation(fields: [occurrence_id], references: [id], onDelete: Cascade, map: "FK_users_occurrences_occurrences")
+
+  @@index([occurrence_id], map: "occurrence_id")
+}
+
+model users_validations {
+  id          Int                    @id @default(autoincrement()) @db.UnsignedInt
+  user_id     Int
+  item        users_validations_item
+  is_approved Boolean                @default(false)
+  details     String?                @db.LongText
+  created_at  DateTime               @default(now()) @db.Timestamp(0)
+  updated_at  DateTime               @default(now()) @db.Timestamp(0)
+  users       users                  @relation(fields: [user_id], references: [id], onDelete: NoAction, onUpdate: NoAction, map: "users_validations_user_id_foreign")
+
+  @@index([user_id], map: "users_validations_user_id_foreign")
+}
+
+model work_points {
+  id                         BigInt    @id @default(autoincrement()) @db.UnsignedBigInt
+  checkin_at                 DateTime? @db.DateTime(0)
+  checkout_at                DateTime? @db.DateTime(0)
+  created                    DateTime? @db.DateTime(0)
+  modified                   DateTime? @db.DateTime(0)
+  checkout_total_occurrences Int?
+  user_id                    Int?
+  users                      users?    @relation(fields: [user_id], references: [id], onDelete: Cascade, map: "work_points_ibfk_1")
+
+  @@index([user_id], map: "user_Id")
+}
+
+enum account_statements_type {
+  EXPENSE
+  INCOME
+}
+
+enum account_statements_financial_type {
+  COIN
+  POINT
+}
+
+enum advance_payments_type {
+  DISPLACEMENT
+  ORDER
+}
+
+enum advance_payments_status {
+  ACCOMPLISHED
+  AWAITING_APPROVAL
+  AWAITING_FINANCIAL
+  DECLINED_APPROVAL
+  FINANCIAL_DENIED
+  PAID
+}
+
+enum changelogs_user_type {
+  ADMIN
+  CLIENT
+  TECH
+}
+
+enum collects_status {
+  PAID
+  WAITNG_PAYMENT
+  UNPAID
+}
+
+enum collects_payment_method {
+  BOLETO
+  CREDIT_CARD
+}
+
+enum contracts_payment_type {
+  PREPAID
+  POSTPAID
+}
+
+enum contracts_type {
+  PRIMARY
+  SECONDARY
+}
+
+enum contracts_status {
+  paid
+  unpaid
+  pending_payment
+  finished
+}
+
+enum coupons_type {
+  PERCENT
+  COIN
+}
+
+enum coupons_use_mode {
+  ALL
+  UNIQUE
+  FIRST
+}
+
+enum dialogues_type {
+  CLIENT
+  TECH
+}
+
+enum documents_approved {
+  APPROVED
+  VALIDATION
+  REFUSED
+}
+
+enum enterprises_type {
+  CLIENT
+  TECH_CLIENT @map("TECH-CLIENT")
+  TECH
+  STORAGE
+}
+
+enum enterprises_type_occurrence {
+  FINDUP
+  INTERNAL
+  FINDUP_INTERNAL
+}
+
+enum faqs_type {
+  CLIENT
+  TECH
+}
+
+enum funds_type {
+  FREE
+  DETACHED
+  RECURRENT
+  PROJECT
+}
+
+enum funds_contract_charges {
+  MULTIPLE
+  UNIQUE
+}
+
+enum funds_payment_method {
+  BOLETO
+  CREDIT_CARD
+}
+
+enum funds_payment_period {
+  MONTHLY
+  SEMESTRAL
+  ANNUAL
+}
+
+enum individuals_gender {
+  FEMALE
+  MALE
+  OTHER
+}
+
+enum invoices_status {
+  PAID_WITH_INVOICE
+  PAID_WITHOUT_INVOICE
+  UNPAID
+  AWAITING_PAYMENT
+  AWAITING_ATTACHMENT
+  AWAITING_VALIDATION
+  CANCELED
+  REJECTED
+}
+
+enum medias_type {
+  CLIENT
+  TECH
+  INVOICE
+  INVOICE_TECH
+}
+
+enum medias_validation {
+  VALIDATED
+  AWAITING_VALIDATION
+  INVALIDATED
+}
+
+enum messages_type {
+  CLIENT
+  SPECIALIST
+}
+
+enum occurrences_technicians_target {
+  FINDUP
+  INTERNAL
+  SPECIFIC
+}
+
+enum occurrences_platform {
+  WEB
+  ANDROID
+  IOS
+  UWA
+  ADMIN
+  ADMIN_B2B
+  WALMART
+  OLD_CORP
+  SANTANDER
+}
+
+enum occurrences_criticality {
+  HIGH
+  MID
+  LOW
+}
+
+enum occurrences_status {
+  OPENED
+  ACCEPTED
+  GOING
+  ON_SERVICE
+  AWAITING_PAYMENT
+  PAYED_SPECIALIST
+  FINISHED
+  CANCELED
+  UNPRODUCTIVE
+  INVALID
+  PENDING_PAYMENT
+  AWAITING_VALIDATION
+  OPERATION_VALIDATION
+  AWAITING_FOR_OPENING
+}
+
+enum occurrences_type {
+  FIELD
+  REMOTE
+  LOGISTIC
+}
+
+enum occurrences_reason {
+  PARTNER_HAS_BACKUP_EQUIPMENT
+  PARTNER_SPECIALIZED_TECHNICAL_KNOWLEDGE
+  IMMEDIATE_SERVICE_AVAILABILITY
+  OTHERS
+}
+
+enum occurrences_services_status {
+  NEW
+  IN_PROGRESS
+  PENDING
+  CANCELED
+}
+
+enum orders_status {
+  PENDING
+  OPERATION_APPROVED
+  OPERATION_REJECTED
+  CLIENT_APPROVED
+  CLIENT_REJECTED
+}
+
+enum prices_occurrence_discount_type {
+  PERCENT
+  COIN
+}
+
+enum prices_occurrence_displacement_status {
+  PENDING
+  PAID
+  WITHOUT_DISPLACEMENT
+}
+
+enum priority_technicians_type {
+  RESTRICT
+  NORMAL
+}
+
+enum proposed_occurrences_type {
+  REGION_NOT_FOUND
+}
+
+enum ratings_type {
+  CLIENT
+  TECH
+  APP
+}
+
+enum reviews_type {
+  CRITIQUE
+  PRAISE
+}
+
+enum reviews_type_rating {
+  CLIENT
+  TECH
+  APP
+}
+
+enum users_badge {
+  DIAMOND
+  GOLD
+  SILVER
+  BRONZE
+}
+
+enum users_status {
+  ANALYSIS
+  RELEASED
+  BLACKLIST
+  INVALID
+  RELEASED_TMP
+}
+
+enum users_occurrences_type {
+  CONTACT
+  VALIDATOR
+}
+
+enum users_occurrences_role {
+  ANALYST
+  MANAGER
+  SUPERVISOR
+  LOCAL_CONTACT
+}
+
+enum users_occurrences_required_for {
+  INIT
+  END
+  BOTH
+}
+
+enum users_validations_item {
+  CPF
+  ARREST_WARRANT
+  CRIMINAL_RECORDS
+  PROCESSES
+}
